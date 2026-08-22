@@ -1,0 +1,1421 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano de Ação Corretiva</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--tinta);
+    }
+
+    .bloco {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .titulo-secao {
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--grafite);
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .guarda-lógica {
+      background-color: var(--aco-claro);
+      border-left: 4px solid var(--aco);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .guarda-lógica.ativo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .guarda-lógica::before {
+      content: "⚠";
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .investigacao-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 700px) {
+      .investigacao-info {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .campo-readonly {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .campo-readonly label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--grafite);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    .campo-readonly .valor {
+      font-size: 0.95rem;
+      padding: 0.75rem;
+      background-color: var(--papel);
+      border: 1px solid var(--regua);
+      color: var(--tinta);
+      font-family: system-ui;
+      word-break: break-word;
+    }
+
+    .formulario-grupo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 700px) {
+      .formulario-grupo {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .formulario-grupo.full {
+      grid-template-columns: 1fr;
+    }
+
+    .campo {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .campo label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--grafite);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .campo input,
+    .campo select,
+    .campo textarea {
+      font-family: system-ui;
+      font-size: 0.95rem;
+      padding: 0.75rem;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      color: var(--tinta);
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .campo textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: system-ui;
+    }
+
+    .campo input:focus,
+    .campo select:focus,
+    .campo textarea:focus {
+      outline: none;
+      border-color: var(--aco);
+      background-color: white;
+      box-shadow: inset 0 0 0 2px var(--aco-claro);
+    }
+
+    .obrigatorio::after {
+      content: " *";
+      color: var(--critico);
+    }
+
+    .mensagem-erro {
+      color: var(--critico);
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .mensagem-erro.ativo {
+      display: block;
+    }
+
+    .botao {
+      background-color: var(--aco);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      cursor: pointer;
+      min-height: 48px;
+      letter-spacing: 0.05em;
+      transition: background-color 0.2s;
+    }
+
+    .botao:hover {
+      background-color: #153d4d;
+    }
+
+    .botao:disabled {
+      background-color: var(--grafite);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .botao-secundario {
+      background-color: var(--grafite);
+      color: white;
+    }
+
+    .botao-secundario:hover {
+      background-color: #4a5460;
+    }
+
+    .botao-sucesso {
+      background-color: var(--ok);
+    }
+
+    .botao-sucesso:hover {
+      background-color: #1f5437;
+    }
+
+    .botao-alerta {
+      background-color: var(--alerta);
+    }
+
+    .botao-alerta:hover {
+      background-color: #7d4605;
+    }
+
+    .botao-grupo {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 700px) {
+      .botao-grupo {
+        flex-direction: column;
+      }
+
+      .botao {
+        width: 100%;
+      }
+    }
+
+    .tabela-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    table thead {
+      background-color: var(--papel);
+      border-bottom: 2px solid var(--regua);
+    }
+
+    table th {
+      text-align: left;
+      padding: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      color: var(--grafite);
+      letter-spacing: 0.05em;
+    }
+
+    table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--regua);
+    }
+
+    table tbody tr:hover {
+      background-color: var(--aco-claro);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-aberto {
+      background-color: #fce5cd;
+      color: var(--alerta);
+    }
+
+    .badge-concluido {
+      background-color: #d4edda;
+      color: var(--ok);
+    }
+
+    .badge-em-atraso {
+      background-color: #f8d7da;
+      color: var(--critico);
+    }
+
+    .acoes-tabela {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .botao-pequeno {
+      background-color: var(--aco);
+      color: white;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      min-height: auto;
+      transition: background-color 0.2s;
+    }
+
+    .botao-pequeno:hover {
+      background-color: #153d4d;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.ativo {
+      display: flex;
+    }
+
+    .modal-conteudo {
+      background-color: var(--superficie);
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      border: 1px solid var(--regua);
+    }
+
+    .modal-titulo {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--tinta);
+    }
+
+    .modal-fechar {
+      float: right;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--grafite);
+    }
+
+    .modal-fechar:hover {
+      color: var(--tinta);
+    }
+
+    .mensagem-info {
+      background-color: var(--aco-claro);
+      border-left: 4px solid var(--aco);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      color: var(--tinta);
+      display: none;
+    }
+
+    .mensagem-info.ativo {
+      display: block;
+    }
+
+    .mensagem-sucesso {
+      background-color: #d4edda;
+      border-left: 4px solid var(--ok);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      color: var(--ok);
+      display: none;
+    }
+
+    .mensagem-sucesso.ativo {
+      display: block;
+    }
+
+    .estado-vazio {
+      text-align: center;
+      padding: 2rem;
+      color: var(--grafite);
+    }
+
+    .estado-vazio p {
+      margin-bottom: 1rem;
+    }
+
+    .filtros-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 700px) {
+      .filtros-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .historico-item {
+      border-left: 4px solid var(--aco);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: var(--papel);
+    }
+
+    .historico-data {
+      font-family: ui-monospace;
+      font-size: 0.8rem;
+      color: var(--grafite);
+      margin-bottom: 0.5rem;
+    }
+
+    .historico-descricao {
+      font-size: 0.9rem;
+      color: var(--tinta);
+      margin-bottom: 0.25rem;
+    }
+
+    .historico-usuario {
+      font-size: 0.8rem;
+      color: var(--grafite);
+      font-style: italic;
+    }
+
+    .upload-area {
+      border: 2px dashed var(--regua);
+      padding: 1.5rem;
+      text-align: center;
+      background-color: var(--papel);
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .upload-area:hover {
+      border-color: var(--aco);
+    }
+
+    .upload-area.arrastando {
+      border-color: var(--aco);
+      background-color: var(--aco-claro);
+    }
+
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    .arquivo-info {
+      background-color: var(--aco-claro);
+      border: 1px solid var(--aco);
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      display: none;
+      font-size: 0.85rem;
+    }
+
+    .arquivo-info.ativo {
+      display: block;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .loading.ativo {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid var(--regua);
+      border-top: 3px solid var(--aco);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: gira 0.8s linear infinite;
+      margin: 0 auto 0.5rem;
+    }
+
+    @keyframes gira {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .truncado {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+    }
+
+    .truncado:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 125%;
+      left: 0;
+      background-color: var(--tinta);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 0;
+      white-space: normal;
+      word-wrap: break-word;
+      width: 250px;
+      font-size: 0.8rem;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .data-hora {
+      font-family: ui-monospace;
+      font-size: 0.85rem;
+      color: var(--grafite);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Plano de Ação Corretiva</h1>
+
+    <div id="mensagemSucesso" class="mensagem-sucesso"></div>
+    <div id="mensagemErro" class="bloco" style="background-color: #f8d7da; border-left: 4px solid var(--critico); display: none;"></div>
+
+    <!-- GUARDA LÓGICA: Verificar se investigação está concluída -->
+    <div id="guardaLógica" class="guarda-lógica">
+      <span>Investigação não está concluída. Carregando dados...</span>
+    </div>
+
+    <!-- SEÇÃO: INFORMAÇÕES DA INVESTIGAÇÃO (SOMENTE LEITURA) -->
+    <div id="secaoInvestigacao" class="bloco" style="display: none;">
+      <div class="titulo-secao">Investigação Associada (Somente Leitura)</div>
+      
+      <div class="investigacao-info">
+        <div class="campo-readonly">
+          <label>ID da Investigação</label>
+          <div class="valor" id="investigacaoId">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Não Conformidade ID</label>
+          <div class="valor" id="naoConformidadeId">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Equipamento</label>
+          <div class="valor" id="equipamento">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Turno</label>
+          <div class="valor" id="turno">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Lote Afetado</label>
+          <div class="valor" id="loteAfetado">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Matéria-Prima</label>
+          <div class="valor" id="materiaPrima">--</div>
+        </div>
+      </div>
+
+      <div class="campo-readonly" style="margin-bottom: 1rem;">
+        <label>Descrição da Não Conformidade</label>
+        <div class="valor" id="descricaoNaoConformidade">--</div>
+      </div>
+
+      <div class="campo-readonly">
+        <label>Causa Raiz Confirmada</label>
+        <div class="valor" id="causaRaizConfirmada">--</div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: CRIAR NOVO PLANO DE AÇÃO -->
+    <div id="secaoFormulario" class="bloco" style="display: none;">
+      <div class="titulo-secao">Criar Novo Plano de Ação Corretiva</div>
+      
+      <div class="formulario-grupo full">
+        <div class="campo">
+          <label for="acaoCorretiva" class="obrigatorio">Ação Corretiva</label>
+          <textarea id="acaoCorretiva" placeholder="Descreva a ação corretiva a ser implementada..." aria-label="Ação Corretiva obrigatória"></textarea>
+          <div class="mensagem-erro" id="erroAcaoCorretiva"></div>
+        </div>
+      </div>
+
+      <div class="formulario-grupo">
+        <div class="campo">
+          <label for="responsavelId" class="obrigatorio">Responsável pela Execução</label>
+          <select id="responsavelId" aria-label="Selecione o responsável pela ação">
+            <option value="">-- Selecione um responsável --</option>
+          </select>
+          <div class="mensagem-erro" id="erroResponsavel"></div>
+        </div>
+
+        <div class="campo">
+          <label for="prazo" class="obrigatorio">Prazo de Conclusão</label>
+          <input type="date" id="prazo" aria-label="Data de prazo para conclusão da ação">
+          <div class="mensagem-erro" id="erroPrazo"></div>
+        </div>
+      </div>
+
+      <div class="botao-grupo">
+        <button class="botao botao-sucesso" id="botaoSalvar" onclick="salvarNovoPlano()">Salvar Plano de Ação</button>
+        <button class="botao botao-secundario" id="botaoLimpar" onclick="limparFormulario()">Limpar</button>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: TABELA DE PLANOS DE AÇÃO -->
+    <div id="secaoTabela" class="bloco" style="display: none;">
+      <div class="titulo-secao">Planos de Ação Registrados</div>
+
+      <div class="filtros-container">
+        <div class="campo">
+          <label for="filtroStatus">Filtrar por Status</label>
+          <select id="filtroStatus" onchange="aplicarFiltros()">
+            <option value="">-- Todos --</option>
+            <option value="Aberto">Aberto</option>
+            <option value="Concluída">Concluída</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroResponsavel">Filtrar por Responsável</label>
+          <select id="filtroResponsavel" onchange="aplicarFiltros()">
+            <option value="">-- Todos --</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroData">Filtrar por Prazo</label>
+          <input type="date" id="filtroData" onchange="aplicarFiltros()">
+        </div>
+      </div>
+
+      <div id="divEstadoVazio" class="estado-vazio">
+        <p>Nenhum plano de ação registrado ainda.</p>
+        <p>Preencha o formulário acima para criar o primeiro plano de ação corretiva.</p>
+      </div>
+
+      <div id="divTabelaPlanosAcao" class="tabela-container" style="display: none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Ação Corretiva</th>
+              <th>Responsável</th>
+              <th>Prazo</th>
+              <th>Status</th>
+              <th>Última Atualização</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPlanosAcao">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Detalhes e Atualizar Plano -->
+  <div id="modalDetalhes" class="modal">
+    <div class="modal-conteudo">
+      <span class="modal-fechar" onclick="fecharModal('modalDetalhes')">&times;</span>
+      <div class="modal-titulo">Detalhes do Plano de Ação</div>
+
+      <div class="mensagem-info" id="modalMensagemInfo"></div>
+
+      <div class="campo-readonly" style="margin-bottom: 1rem;">
+        <label>Ação Corretiva</label>
+        <div class="valor" id="modalAcaoCorretiva" style="min-height: 80px;">--</div>
+      </div>
+
+      <div class="formulario-grupo" style="margin-bottom: 1rem;">
+        <div class="campo-readonly">
+          <label>Responsável</label>
+          <div class="valor" id="modalResponsavel">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Prazo</label>
+          <div class="valor" id="modalPrazo">--</div>
+        </div>
+      </div>
+
+      <div class="formulario-grupo" style="margin-bottom: 1rem;">
+        <div class="campo-readonly">
+          <label>Status Atual</label>
+          <div class="valor" id="modalStatus">--</div>
+        </div>
+        <div class="campo-readonly">
+          <label>Criada em</label>
+          <div class="valor data-hora" id="modalDataCriacao">--</div>
+        </div>
+      </div>
+
+      <div class="campo-readonly" style="margin-bottom: 1rem;">
+        <label>Criada por</label>
+        <div class="valor" id="modalCriadaPor">--</div>
+      </div>
+
+      <!-- SEÇÃO: Atualizar Status (visível apenas para responsável ou admin) -->
+      <div id="secaoAtualizarStatus" style="display: none; border-top: 2px solid var(--regua); padding-top: 1.5rem; margin-top: 1.5rem;">
+        <div class="titulo-secao">Atualizar Status para Concluída</div>
+
+        <div class="formulario-grupo full" style="margin-bottom: 1rem;">
+          <div class="campo">
+            <label for="descricaoConclusao" class="obrigatorio">Descrição da Conclusão</label>
+            <textarea id="descricaoConclusao" placeholder="Descreva como a ação foi concluída..." aria-label="Descrição de conclusão obrigatória"></textarea>
+            <div class="mensagem-erro" id="erroDescricaoConclusao"></div>
+          </div>
+        </div>
+
+        <div class="upload-area" id="uploadArea" title="Clique ou arraste arquivos aqui">
+          <div>📎 Clique ou arraste arquivos aqui (PDF, imagens, vídeos)</div>
+          <input type="file" id="inputArquivo" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.avi,.mov,.mkv" aria-label="Selecione arquivo de evidência">
+        </div>
+
+        <div class="arquivo-info" id="arquivoInfo"></div>
+
+        <div class="botao-grupo" style="margin-top: 1rem;">
+          <button class="botao botao-sucesso" id="botaoMarcarConcluida" onclick="atualizarStatusPlano('Concluída')">Marcar como Concluída</button>
+          <button class="botao botao-secundario" onclick="fecharModal('modalDetalhes')">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- SEÇÃO: Histórico de Status -->
+      <div id="secaoHistorico" style="border-top: 2px solid var(--regua); padding-top: 1.5rem; margin-top: 1.5rem; display: none;">
+        <div class="titulo-secao">Histórico de Mudanças de Status</div>
+        <div id="divHistorico"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== ESTADO GLOBAL =====
+    let usuarioAtual = null;
+    let investigacaoAtual = null;
+    let naoConformidadeAtual = null;
+    let planosAcao = [];
+    let planosAcaoFiltrados = [];
+    let planoAtualAberto = null;
+    let arquivoSelecionado = null;
+    let usuariosDisponibles = [];
+
+    // ===== INICIALIZAÇÃO =====
+    document.addEventListener('DOMContentLoaded', async () => {
+      await inicializarPagina();
+    });
+
+    async function inicializarPagina() {
+      try {
+        // Obter parâmetro de investigação da URL
+        const params = new URLSearchParams(window.location.search);
+        const investigacaoId = params.get('investigacao_id');
+
+        if (!investigacaoId) {
+          mostrarErro('Nenhuma investigação selecionada. Por favor, retorne e selecione uma investigação concluída.');
+          return;
+        }
+
+        // Simular usuário logado (em produção, seria obtido de autenticação real)
+        usuarioAtual = {
+          id: 'user-001',
+          nome: 'João Silva',
+          perfil: 'gerente-qualidade'
+        };
+
+        // Carregar usuários disponíveis para dropdown
+        await carregarUsuariosDisponibles();
+
+        // Carregar dados da investigação
+        await carregarInvestigacao(investigacaoId);
+
+        // Se investigação estiver concluída, mostrar formulário
+        if (investigacaoAtual && investigacaoAtual.dados.status === 'Concluída') {
+          document.getElementById('secaoInvestigacao').style.display = 'block';
+          document.getElementById('secaoFormulario').style.display = 'block';
+          document.getElementById('secaoTabela').style.display = 'block';
+          document.getElementById('guardaLógica').style.display = 'none';
+          
+          preencherInformacaoesInvestigacao();
+          configurarDataMinimaPrazo();
+          await carregarPlanosAcao(investigacaoId);
+        } else {
+          mostrarGuardaLogica('Investigação ainda não foi concluída. Apenas investigações com status "Concluída" podem ter planos de ação registrados.');
+        }
+      } catch (erro) {
+        console.error('Erro ao inicializar:', erro);
+        mostrarErro('Erro ao carregar página: ' + erro.message);
+      }
+    }
+
+    async function carregarUsuariosDisponibles() {
+      try {
+        const response = await fetch('/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records?tipo=usuarios');
+        const { registros } = await response.json();
+        usuariosDisponibles = registros.map(r => r.dados);
+        
+        preencherDropdownResponsavel();
+      } catch (erro) {
+        console.error('Erro ao carregar usuários:', erro);
+        usuariosDisponibles = [];
+      }
+    }
+
+    function preencherDropdownResponsavel() {
+      const select = document.getElementById('responsavelId');
+      const selectFiltro = document.getElementById('filtroResponsavel');
+      
+      // Limpar opções existentes (manter primeiro option vazio)
+      select.innerHTML = '<option value="">-- Selecione um responsável --</option>';
+      selectFiltro.innerHTML = '<option value="">-- Todos --</option>';
+      
+      usuariosDisponibles.forEach(usuario => {
+        const option1 = document.createElement('option');
+        option1.value = usuario.id;
+        option1.textContent = usuario.nome || usuario.id;
+        select.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = usuario.id;
+        option2.textContent = usuario.nome || usuario.id;
+        selectFiltro.appendChild(option2);
+      });
+    }
+
+    async function carregarInvestigacao(investigacaoId) {
+      try {
+        const response = await fetch(`/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records?tipo=investigacoes`);
+        const { registros } = await response.json();
+        
+        investigacaoAtual = registros.find(r => r.id === investigacaoId);
+        
+        if (!investigacaoAtual) {
+          throw new Error('Investigação não encontrada');
+        }
+
+        // Carregar não conformidade associada
+        const responseNC = await fetch(`/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records?tipo=nao_conformidades`);
+        const { registros: registrosNC } = await responseNC.json();
+        naoConformidadeAtual = registrosNC.find(r => r.id === investigacaoAtual.dados.nao_conformidade_id);
+      } catch (erro) {
+        console.error('Erro ao carregar investigação:', erro);
+        throw erro;
+      }
+    }
+
+    function preencherInformacaoesInvestigacao() {
+      if (!investigacaoAtual || !naoConformidadeAtual) return;
+
+      document.getElementById('investigacaoId').textContent = investigacaoAtual.id || '--';
+      document.getElementById('naoConformidadeId').textContent = naoConformidadeAtual.id || '--';
+      document.getElementById('equipamento').textContent = naoConformidadeAtual.dados.equipamento || '--';
+      document.getElementById('turno').textContent = naoConformidadeAtual.dados.turno || '--';
+      document.getElementById('loteAfetado').textContent = naoConformidadeAtual.dados.lote_afetado || '--';
+      document.getElementById('materiaPrima').textContent = naoConformidadeAtual.dados.materia_prima || '--';
+      document.getElementById('descricaoNaoConformidade').textContent = naoConformidadeAtual.dados.descricao_defeito || '--';
+      document.getElementById('causaRaizConfirmada').textContent = investigacaoAtual.dados.causa_raiz_confirmada || '--';
+    }
+
+    function configurarDataMinimaPrazo() {
+      const inputPrazo = document.getElementById('prazo');
+      const amanha = new Date();
+      amanha.setDate(amanha.getDate() + 1);
+      
+      const dataFormatada = amanha.toISOString().split('T')[0];
+      inputPrazo.setAttribute('min', dataFormatada);
+    }
+
+    async function carregarPlanosAcao(investigacaoId) {
+      try {
+        const response = await fetch(`/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records?tipo=planos_acao`);
+        const { registros } = await response.json();
+        
+        planosAcao = registros.filter(r => r.dados.investigacao_id === investigacaoId);
+        planosAcaoFiltrados = [...planosAcao];
+        
+        atualizarTabela();
+      } catch (erro) {
+        console.error('Erro ao carregar planos de ação:', erro);
+        planosAcao = [];
+        atualizarTabela();
+      }
+    }
+
+    function atualizarTabela() {
+      const tbody = document.getElementById('tbodyPlanosAcao');
+      const divEstado = document.getElementById('divEstadoVazio');
+      const divTabela = document.getElementById('divTabelaPlanosAcao');
+
+      tbody.innerHTML = '';
+
+      if (planosAcaoFiltrados.length === 0) {
+        divEstado.style.display = 'block';
+        divTabela.style.display = 'none';
+        return;
+      }
+
+      divEstado.style.display = 'none';
+      divTabela.style.display = 'block';
+
+      planosAcaoFiltrados.forEach(plano => {
+        const tr = document.createElement('tr');
+        
+        const acaoTexto = plano.dados.acao_corretiva;
+        const acaoTruncada = acaoTexto.length > 50 ? acaoTexto.substring(0, 50) + '...' : acaoTexto;
+        
+        const responsavel = usuariosDisponibles.find(u => u.id === plano.dados.responsavel_id);
+        const responsavelNome = responsavel ? responsavel.nome : plano.dados.responsavel_id;
+        
+        const prazoData = new Date(plano.dados.prazo);
+        const prazoFormatado = prazoData.toLocaleDateString('pt-BR');
+        
+        const statusClass = plano.dados.status === 'Concluída' ? 'badge-concluido' : (new Date(plano.dados.prazo) < new Date() && plano.dados.status !== 'Concluída' ? 'badge-em-atraso' : 'badge-aberto');
+        
+        const ultimaAtualizacao = plano.dados.ultima_atualizacao 
+          ? new Date(plano.dados.ultima_atualizacao).toLocaleString('pt-BR')
+          : '--';
+
+        tr.innerHTML = `
+          <td class="truncado" title="${acaoTexto}">${acaoTruncada}</td>
+          <td>${responsavelNome}</td>
+          <td>${prazoFormatado}</td>
+          <td><span class="badge ${statusClass}">${plano.dados.status}</span></td>
+          <td class="data-hora">${ultimaAtualizacao}</td>
+          <td class="acoes-tabela">
+            <button class="botao-pequeno" onclick="abrirDetalhesPlan('${plano.id}')">Ver Detalhes</button>
+          </td>
+        `;
+        
+        tbody.appendChild(tr);
+      });
+    }
+
+    function abrirDetalhesPlan(planoId) {
+      const plano = planosAcao.find(p => p.id === planoId);
+      if (!plano) return;
+
+      planoAtualAberto = plano;
+      arquivoSelecionado = null;
+
+      // Preencher informações do plano
+      document.getElementById('modalAcaoCorretiva').textContent = plano.dados.acao_corretiva || '--';
+      
+      const responsavel = usuariosDisponibles.find(u => u.id === plano.dados.responsavel_id);
+      document.getElementById('modalResponsavel').textContent = responsavel ? responsavel.nome : plano.dados.responsavel_id;
+      
+      const prazoData = new Date(plano.dados.prazo);
+      document.getElementById('modalPrazo').textContent = prazoData.toLocaleDateString('pt-BR');
+      
+      document.getElementById('modalStatus').textContent = plano.dados.status;
+      
+      const dataCriacao = plano.dados.data_criacao 
+        ? new Date(plano.dados.data_criacao).toLocaleString('pt-BR')
+        : '--';
+      document.getElementById('modalDataCriacao').textContent = dataCriacao;
+      
+      const criadoPor = usuariosDisponibles.find(u => u.id === plano.dados.criado_por);
+      document.getElementById('modalCriadaPor').textContent = criadoPor ? criadoPor.nome : plano.dados.criado_por || '--';
+
+      // Mostrar seção de atualização apenas se usuário é o responsável E status é 'Aberto'
+      const secaoAtualizar = document.getElementById('secaoAtualizarStatus');
+      const ehResponsavel = plano.dados.responsavel_id === usuarioAtual.id;
+      const ehAdmin = usuarioAtual.perfil === 'admin';
+      const podeAtualizar = (ehResponsavel || ehAdmin) && plano.dados.status === 'Aberto';
+
+      if (podeAtualizar) {
+        secaoAtualizar.style.display = 'block';
+        document.getElementById('descricaoConclusao').value = '';
+        document.getElementById('descricaoConclusao').style.display = 'block';
+        document.getElementById('uploadArea').style.display = 'block';
+        document.getElementById('arquivoInfo').innerHTML = '';
+        document.getElementById('arquivoInfo').classList.remove('ativo');
+      } else {
+        secaoAtualizar.style.display = 'none';
+      }
+
+      // Mostrar histórico
+      const secaoHistorico = document.getElementById('secaoHistorico');
+      const divHistorico = document.getElementById('divHistorico');
+      
+      if (plano.dados.historico && plano.dados.historico.length > 0) {
+        secaoHistorico.style.display = 'block';
+        divHistorico.innerHTML = '';
+        
+        plano.dados.historico.forEach(item => {
+          const dataFormatada = new Date(item.data).toLocaleString('pt-BR');
+          const usuarioNome = usuariosDisponibles.find(u => u.id === item.usuario);
+          const nomeUsuario = usuarioNome ? usuarioNome.nome : item.usuario;
+          
+          const div = document.createElement('div');
+          div.className = 'historico-item';
+          div.innerHTML = `
+            <div class="historico-data">${dataFormatada}</div>
+            <div class="historico-descricao">${item.status_anterior} → ${item.status_novo}</div>
+            <div class="historico-usuario">Por: ${nomeUsuario}</div>
+          `;
+          divHistorico.appendChild(div);
+        });
+      } else {
+        secaoHistorico.style.display = 'none';
+      }
+
+      // Mostrar evidência se plano já foi concluído
+      if (plano.dados.evidencia) {
+        if (plano.dados.evidencia.texto_conclusao) {
+          document.getElementById('modalMensagemInfo').innerHTML = `
+            <strong>Conclusão Registrada:</strong><br>
+            ${plano.dados.evidencia.texto_conclusao}
+          `;
+          document.getElementById('modalMensagemInfo').classList.add('ativo');
+        }
+      } else {
+        document.getElementById('modalMensagemInfo').classList.remove('ativo');
+      }
+
+      // Limpar campos de upload
+      document.getElementById('inputArquivo').value = '';
+      document.getElementById('erroDescricaoConclusao').classList.remove('ativo');
+
+      // Abrir modal
+      document.getElementById('modalDetalhes').classList.add('ativo');
+    }
+
+    function fecharModal(modalId) {
+      document.getElementById(modalId).classList.remove('ativo');
+      planoAtualAberto = null;
+      arquivoSelecionado = null;
+    }
+
+    function validarFormulario() {
+      let valido = true;
+      
+      // Validar ação corretiva
+      const acaoCorretiva = document.getElementById('acaoCorretiva').value.trim();
+      const erroAcao = document.getElementById('erroAcaoCorretiva');
+      if (!acaoCorretiva) {
+        erroAcao.textContent = 'Ação corretiva é obrigatória';
+        erroAcao.classList.add('ativo');
+        valido = false;
+      } else {
+        erroAcao.classList.remove('ativo');
+      }
+      
+      // Validar responsável
+      const responsavelId = document.getElementById('responsavelId').value;
+      const erroResponsavel = document.getElementById('erroResponsavel');
+      if (!responsavelId) {
+        erroResponsavel.textContent = 'Responsável é obrigatório';
+        erroResponsavel.classList.add('ativo');
+        valido = false;
+      } else {
+        erroResponsavel.classList.remove('ativo');
+      }
+      
+      // Validar prazo
+      const prazo = document.getElementById('prazo').value;
+      const erroPrazo = document.getElementById('erroPrazo');
+      if (!prazo) {
+        erroPrazo.textContent = 'Prazo é obrigatório';
+        erroPrazo.classList.add('ativo');
+        valido = false;
+      } else {
+        const dataMinima = new Date();
+        dataMinima.setDate(dataMinima.getDate() + 1);
+        dataMinima.setHours(0, 0, 0, 0);
+        
+        const dataPrazo = new Date(prazo);
+        if (dataPrazo < dataMinima) {
+          erroPrazo.textContent = 'Prazo deve ser no mínimo amanhã';
+          erroPrazo.classList.add('ativo');
+          valido = false;
+        } else {
+          erroPrazo.classList.remove('ativo');
+        }
+      }
+      
+      return valido;
+    }
+
+    async function salvarNovoPlano() {
+      try {
+        if (!validarFormulario()) return;
+        
+        const acaoCorretiva = document.getElementById('acaoCorretiva').value.trim();
+        const responsavelId = document.getElementById('responsavelId').value;
+        const prazo = document.getElementById('prazo').value;
+        
+        const agora = new Date().toISOString();
+        
+        const novoPlano = {
+          investigacao_id: investigacaoAtual.id,
+          acao_corretiva: acaoCorretiva,
+          responsavel_id: responsavelId,
+          prazo: new Date(prazo).toISOString(),
+          data_criacao: agora,
+          criado_por: usuarioAtual.id,
+          status: 'Aberto',
+          ultima_atualizacao: agora,
+          evidencia: null,
+          historico: [
+            {
+              data: agora,
+              usuario: usuarioAtual.id,
+              status_anterior: null,
+              status_novo: 'Aberto'
+            }
+          ]
+        };
+        
+        const response = await fetch('/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'planos_acao',
+            dados: novoPlano
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erro ao salvar plano de ação');
+        }
+        
+        const resultado = await response.json();
+        
+        mostrarSucesso(`Plano de ação criado com sucesso! ID: ${resultado.id}`);
+        limparFormulario();
+        
+        // Recarregar tabela
+        await carregarPlanosAcao(investigacaoAtual.id);
+      } catch (erro) {
+        console.error('Erro ao salvar plano:', erro);
+        mostrarErro('Erro ao salvar plano de ação: ' + erro.message);
+      }
+    }
+
+    function limparFormulario() {
+      document.getElementById('acaoCorretiva').value = '';
+      document.getElementById('responsavelId').value = '';
+      document.getElementById('prazo').value = '';
+      document.getElementById('erroAcaoCorretiva').classList.remove('ativo');
+      document.getElementById('erroResponsavel').classList.remove('ativo');
+      document.getElementById('erroPrazo').classList.remove('ativo');
+    }
+
+    async function atualizarStatusPlano(novoStatus) {
+      try {
+        if (!planoAtualAberto) return;
+        
+        // Validar se pode atualizar
+        const ehResponsavel = planoAtualAberto.dados.responsavel_id === usuarioAtual.id;
+        const ehAdmin = usuarioAtual.perfil === 'admin';
+        
+        if (!ehResponsavel && !ehAdmin) {
+          mostrarErro('Apenas o responsável pela ação pode atualizar seu status');
+          return;
+        }
+        
+        if (novoStatus === 'Concluída') {
+          // Validar descrição de conclusão
+          const descricaoConclusao = document.getElementById('descricaoConclusao').value.trim();
+          const erroDesc = document.getElementById('erroDescricaoConclusao');
+          
+          if (!descricaoConclusao) {
+            erroDesc.textContent = 'Descrição de conclusão é obrigatória';
+            erroDesc.classList.add('ativo');
+            return;
+          }
+          erroDesc.classList.remove('ativo');
+          
+          // Se houver arquivo, fazer upload (simulado)
+          let arquivoUrl = null;
+          if (arquivoSelecionado) {
+            // Aqui seria feito upload de arquivo para storage
+            // Por enquanto, apenas registramos que há evidência
+            arquivoUrl = `arquivo_${Date.now()}_${arquivoSelecionado.name}`;
+          }
+        }
+        
+        const agora = new Date().toISOString();
+        
+        // Atualizar plano
+        const dadosAtualizados = {
+          ...planoAtualAberto.dados,
+          status: novoStatus,
+          ultima_atualizacao: agora
+        };
+        
+        if (novoStatus === 'Concluída') {
+          const descricaoConclusao = document.getElementById('descricaoConclusao').value.trim();
+          let arquivoUrl = null;
+          
+          if (arquivoSelecionado) {
+            arquivoUrl = `arquivo_${Date.now()}_${arquivoSelecionado.name}`;
+          }
+          
+          dadosAtualizados.evidencia = {
+            texto_conclusao: descricaoConclusao,
+            arquivo_url: arquivoUrl,
+            data_upload: agora,
+            enviado_por: usuarioAtual.id,
+            turno: naoConformidadeAtual.dados.turno || null,
+            equipamento: naoConformidadeAtual.dados.equipamento || null
+          };
+          
+          dadosAtualizados.data_conclusao = agora;
+          dadosAtualizados.concluido_por = usuarioAtual.id;
+        }
+        
+        // Adicionar entrada ao histórico
+        if (!dadosAtualizados.historico) {
+          dadosAtualizados.historico = [];
+        }
+        
+        dadosAtualizados.historico.push({
+          data: agora,
+          usuario: usuarioAtual.id,
+          status_anterior: planoAtualAberto.dados.status,
+          status_novo: novoStatus
+        });
+        
+        // Fazer requisição para atualizar
+        const response = await fetch(`/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records/${planoAtualAberto.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'planos_acao',
+            dados: dadosAtualizados
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Erro ao atualizar plano');
+        }
+        
+        mostrarSucesso(`Plano marcado como ${novoStatus} com sucesso!`);
+        fecharModal('modalDetalhes');
+        await carregarPlanosAcao(investigacaoAtual.id);
+      } catch (erro) {
+        console.error('Erro ao atualizar status:', erro);
+        mostrarErro('Erro ao atualizar status: ' + erro.message);
+      }
+    }
+
+    function mostrarArquivoSelecionado(files) {
+      if (!files || files.length === 0) return;
+      
+      const arquivo = files[0];
+      const tamanhoMB = arquivo.size / (1024 * 1024);
+      const maxTamanho = 100; // 100MB
+      
+      const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+      
+      if (!tiposPermitidos.includes(arquivo.type)) {
+        document.getElementById('arquivoInfo').innerHTML = `<strong style="color: var(--critico);">❌ Tipo de arquivo não permitido. Use PDF, imagens ou vídeos.</strong>`;
+        document.getElementById('arquivoInfo').classList.add('ativo');
+        document.getElementById('inputArquivo').value = '';
+        arquivoSelecionado = null;
+        return;
+      }
+      
+      if (tamanhoMB > maxTamanho) {
+        document.getElementById('arquivoInfo').innerHTML = `<strong style="color: var(--critico);">❌ Arquivo muito grande. Máximo ${maxTamanho}MB.</strong>`;
+        document.getElementById('arquivoInfo').classList.add('ativo');
+        document.getElementById('inputArquivo').value = '';
+        arquivoSelecionado = null;
+        return;
+      }
+      
+      arquivoSelecionado = arquivo;
+      document.getElementById('arquivoInfo').innerHTML = `
+        ✅ <strong>${arquivo.name}</strong> (${(tamanhoMB).toFixed(2)}MB) selecionado
+      `;
+      document.getElementById('arquivoInfo').classList.add('ativo');
+    }
+
+    // Eventos de upload
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadArea = document.getElementById('uploadArea');
+      const inputArquivo = document.getElementById('inputArquivo');
+      
+      if (uploadArea && inputArquivo) {
+        uploadArea.addEventListener('click', () => inputArquivo.click());
+        
+        inputArquivo.addEventListener('change', (e) => mostrarArquivoSelecionado(e.target.files));
+        
+        uploadArea.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          uploadArea.classList.add('arrastando');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+          uploadArea.classList.remove('arrastando');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+          e.preventDefault();
+          uploadArea.classList.remove('arrastando');
+          mostrarArquivoSelecionado(e.dataTransfer.files);
+          inputArquivo.files = e.dataTransfer.files;
+        });
+      }
+    });
+
+    function aplicarFiltros() {
+      const filtroStatus = document.getElementById('filtroStatus').value;
+      const filtroResponsavel = document.getElementById('filtroResponsavel').value;
+      const filtroData = document.getElementById('filtroData').value;
+      
+      planosAcaoFiltrados = planosAcao.filter(plano => {
+        let passa = true;
+        
+        if (filtroStatus && plano.dados.status !== filtroStatus) {
+          passa = false;
+        }
+        
+        if (filtroResponsavel && plano.dados.responsavel_id !== filtroResponsavel) {
+          passa = false;
+        }
+        
+        if (filtroData) {
+          const prazoPlano = new Date(plano.dados.prazo).toISOString().split('T')[0];
+          if (prazoPlano !== filtroData) {
+            passa = false;
+          }
+        }
+        
+        return passa;
+      });
+      
+      atualizarTabela();
+    }
+
+    function mostrarGuardaLogica(mensagem) {
+      const guarda = document.getElementById('guardaLógica');
+      guarda.textContent = '⚠ ' + mensagem;
+      guarda.classList.add('ativo');
+    }
+
+    function mostrarErro(mensagem) {
+      const div = document.getElementById('mensagemErro');
+      div.textContent = '❌ ' + mensagem;
+      div.style.display = 'block';
+      
+      // Rolar para o erro
+      div.scrollIntoView({ behavior: 'smooth' });
+      
+      setTimeout(() => {
+        div.style.display = 'none';
+      }, 5000);
+    }
+
+    function mostrarSucesso(mensagem) {
+      const div = document.getElementById('mensagemSucesso');
+      div.textContent = '✅ ' + mensagem;
+      div.classList.add('ativo');
+      
+      setTimeout(() => {
+        div.classList.remove('ativo');
+      }, 4000);
+    }
+
+    // Fechar modal ao clicar fora
+    window.addEventListener('click', (event) => {
+      const modal = document.getElementById('modalDetalhes');
+      if (event.target === modal) {
+        fecharModal('modalDetalhes');
+      }
+    });
+
+    // Permitir ENTER em textarea
+    document.addEventListener('DOMContentLoaded', () => {
+      const textareas = document.querySelectorAll('textarea');
+      textareas.forEach(ta => {
+        ta.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && e.ctrlKey) {
+            if (ta.id === 'acaoCorretiva') {
+              salvarNovoPlano();
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

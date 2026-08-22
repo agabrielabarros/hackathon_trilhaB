@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultado da Perda — Calculadora</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #E7EAE4;
+      color: #14171A;
+      line-height: 1.5;
+    }
+
+    body {
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #14171A;
+    }
+
+    .section {
+      background-color: #FCFDFB;
+      border: 1px solid #C6CBC3;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5C636A;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    /* ===== AVISO DE DIFERENÇA NÃO EXPLICADA ===== */
+    .banner-aviso {
+      display: none;
+      background-color: #FFF3E0;
+      border-left: 4px solid #9A5407;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #5C636A;
+    }
+
+    .banner-aviso.ativo {
+      display: block;
+    }
+
+    /* ===== RESUMO DA OPERAÇÃO ===== */
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .resumo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .resumo-item {
+      background-color: #F5F7F3;
+      border: 1px solid #E2ECEF;
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    .resumo-label {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5C636A;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+
+    .resumo-valor {
+      font-family: ui-monospace, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1F4E5F;
+    }
+
+    /* ===== CARDS DE MÉTRICAS ===== */
+    .metricas-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .metricas-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metrica-card {
+      background-color: #F5F7F3;
+      border: 1px solid #E2ECEF;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .metrica-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5C636A;
+      margin-bottom: 8px;
+    }
+
+    .metrica-valor {
+      font-family: ui-monospace, monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #14171A;
+      margin-bottom: 8px;
+    }
+
+    /* ===== SEMÁFORO STATUS ===== */
+    .status-semaforo {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .semaforo-luz {
+      width: 24px;
+      height: 24px;
+      border-radius: 0;
+      background-color: #C6CBC3;
+    }
+
+    .semaforo-luz.ok {
+      background-color: #2C6E49;
+    }
+
+    .semaforo-luz.atencao {
+      background-color: #9A5407;
+    }
+
+    .semaforo-luz.critico {
+      background-color: #A32116;
+    }
+
+    .status-texto {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5C636A;
+      margin-left: 8px;
+    }
+
+    /* ===== COMPOSIÇÃO ===== */
+    .composicao-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .composicao-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    #graficoComposicao {
+      width: 100%;
+      height: 200px;
+      margin-bottom: 12px;
+    }
+
+    .composicao-tabela {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .composicao-tabela th {
+      background-color: #F5F7F3;
+      border: 1px solid #E2ECEF;
+      padding: 8px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5C636A;
+    }
+
+    .composicao-tabela td {
+      border: 1px solid #E2ECEF;
+      padding: 8px;
+      font-family: ui-monospace, monospace;
+    }
+
+    .composicao-tabela td:nth-child(2),
+    .composicao-tabela td:nth-child(3) {
+      text-align: right;
+    }
+
+    /* ===== OBSERVAÇÃO ===== */
+    .observacao-container {
+      display: none;
+    }
+
+    .observacao-container.ativo {
+      display: block;
+    }
+
+    .observacao-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #5C636A;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    #observacao {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid #C6CBC3;
+      font-family: system-ui;
+      font-size: 13px;
+      color: #14171A;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+
+    .observacao-contador {
+      font-size: 11px;
+      color: #5C636A;
+      text-align: right;
+    }
+
+    /* ===== FÓRMULAS (RODAPÉ) ===== */
+    .formulas {
+      background-color: #F5F7F3;
+      border: 1px solid #E2ECEF;
+      padding: 12px;
+      font-size: 11px;
+      color: #5C636A;
+      font-family: ui-monospace, monospace;
+      line-height: 1.8;
+    }
+
+    .formula-item {
+      margin-bottom: 8px;
+    }
+
+    .formula-item:last-child {
+      margin-bottom: 0;
+    }
+
+    /* ===== BOTÕES ===== */
+    .botoes {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: 1px solid #C6CBC3;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-confirmar {
+      background-color: #2C6E49;
+      color: #FCFDFB;
+      border-color: #2C6E49;
+    }
+
+    .btn-confirmar:hover:not(:disabled) {
+      background-color: #1F4E5F;
+      border-color: #1F4E5F;
+    }
+
+    .btn-confirmar:disabled {
+      background-color: #C6CBC3;
+      color: #5C636A;
+      border-color: #C6CBC3;
+      cursor: not-allowed;
+    }
+
+    .btn-voltar {
+      background-color: #FCFDFB;
+      color: #14171A;
+    }
+
+    .btn-voltar:hover {
+      background-color: #E7EAE4;
+    }
+
+    /* ===== ESTADO VAZIO ===== */
+    .estado-vazio {
+      display: none;
+      background-color: #F5F7F3;
+      border: 1px solid #E2ECEF;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .estado-vazio.ativo {
+      display: block;
+    }
+
+    .estado-vazio p {
+      font-size: 13px;
+      color: #5C636A;
+      margin-bottom: 12px;
+    }
+
+    .estado-vazio strong {
+      color: #14171A;
+    }
+
+    /* ===== TOAST/NOTIFICAÇÃO ===== */
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      background-color: #14171A;
+      color: #FCFDFB;
+      padding: 12px 16px;
+      border-radius: 0;
+      font-size: 12px;
+      z-index: 9999;
+      max-width: 300px;
+      display: none;
+    }
+
+    .toast.ativo {
+      display: block;
+    }
+
+    .toast.sucesso {
+      background-color: #2C6E49;
+    }
+
+    .toast.erro {
+      background-color: #A32116;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Resultado da Perda — Calculadora</h1>
+
+    <div id="avisoValidacao" class="banner-aviso"></div>
+
+    <!-- ===== RESUMO DA OPERAÇÃO ===== -->
+    <div class="section">
+      <span class="section-title">Resumo da Operação</span>
+      <div class="resumo-grid">
+        <div class="resumo-item">
+          <div class="resumo-label">Linha de Extrusão</div>
+          <div class="resumo-valor" id="resumoLinha">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Turno</div>
+          <div class="resumo-valor" id="resumoTurno">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Tipo de Resina</div>
+          <div class="resumo-valor" id="resumoResina">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Resina Consumida</div>
+          <div class="resumo-valor" id="resumoResinaCons">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Tubo Bom Produzido</div>
+          <div class="resumo-valor" id="resumoTuboBom">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Preço da Resina</div>
+          <div class="resumo-valor" id="resumoPreco">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Horas Paradas</div>
+          <div class="resumo-valor" id="resumoHorasParadas">—</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-label">Motivo da Parada</div>
+          <div class="resumo-valor" id="resumoMotivoParada">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MÉTRICAS PRINCIPAIS ===== -->
+    <div class="section">
+      <span class="section-title">Métricas de Perda</span>
+
+      <div class="metricas-grid">
+        <div class="metrica-card">
+          <div class="metrica-label">Perda Total</div>
+          <div class="metrica-valor" id="metricaPerdaTotal">— kg</div>
+        </div>
+        <div class="metrica-card">
+          <div class="metrica-label">Perda Percentual</div>
+          <div class="metrica-valor" id="metricaPerdaPerc">—</div>
+        </div>
+        <div class="metrica-card">
+          <div class="metrica-label">Custo da Perda</div>
+          <div class="metrica-valor" id="metricaCustoPer">—</div>
+        </div>
+        <div class="metrica-card">
+          <div class="metrica-label">Status contra Meta</div>
+          <div class="status-semaforo">
+            <div class="semaforo-luz" id="semaforoLuz"></div>
+            <div class="status-texto" id="statusTexto">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== COMPOSIÇÃO DA PERDA ===== -->
+    <div class="section">
+      <span class="section-title">Composição da Perda</span>
+
+      <div class="composicao-container">
+        <div>
+          <canvas id="graficoComposicao"></canvas>
+        </div>
+        <div>
+          <table class="composicao-tabela">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>KG</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Refugo de Partida</td>
+                <td id="compRefugoKg">0,00</td>
+                <td id="compRefugoPerc">0,0%</td>
+              </tr>
+              <tr>
+                <td>Purga de Troca</td>
+                <td id="compPurgaKg">0,00</td>
+                <td id="compPurgaPerc">0,0%</td>
+              </tr>
+              <tr>
+                <td>Sobra de Corte</td>
+                <td id="compSobraKg">0,00</td>
+                <td id="compSobraPerc">0,0%</td>
+              </tr>
+              <tr>
+                <td><strong>Refugo Total</strong></td>
+                <td id="compRefugoTotalKg">0,00</td>
+                <td id="compRefugoTotalPerc">0,0%</td>
+              </tr>
+              <tr>
+                <td>Diferença Não Explicada</td>
+                <td id="compDifKg">0,00</td>
+                <td id="compDifPerc">0,0%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== OBSERVAÇÃO (CONDICIONAL) ===== -->
+    <div class="section observacao-container" id="observacaoSec">
+      <span class="section-title">Observações sobre Diferenças</span>
+      <label class="observacao-label">Descreva qualquer diferença não explicada (até 200 caracteres)</label>
+      <textarea id="observacao" placeholder="Digite suas observações aqui..."></textarea>
+      <div class="observacao-contador">
+        <span id="observacaoContador">0</span> / 200
+      </div>
+    </div>
+
+    <!-- ===== FÓRMULAS ===== -->
+    <div class="section">
+      <span class="section-title">Fórmulas Utilizadas</span>
+      <div class="formulas">
+        <div class="formula-item">
+          <strong>Perda Total (kg):</strong> Resina Consumida − Tubo Bom
+        </div>
+        <div class="formula-item">
+          <strong>Perda Percentual (%):</strong> (Perda Total ÷ Resina Consumida) × 100
+        </div>
+        <div class="formula-item">
+          <strong>Custo da Perda (R$):</strong> Perda Total × Preço da Resina
+        </div>
+        <div class="formula-item">
+          <strong>Status da Meta:</strong> OK (< 4%), Atenção (4% a 7%), Crítico (> 7%)
+        </div>
+        <div class="formula-item">
+          <strong>Refugo Total (kg):</strong> Refugo Partida + Purga Troca + Sobra Corte
+        </div>
+        <div class="formula-item">
+          <strong>Diferença Não Explicada (kg):</strong> Perda Total − Refugo Total
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BOTÕES ===== -->
+    <div class="botoes">
+      <button class="btn-voltar" id="btnVoltar">Voltar</button>
+      <button class="btn-confirmar" id="btnConfirmar" disabled>Confirmar Registro</button>
+    </div>
+
+    <!-- ===== ESTADO VAZIO ===== -->
+    <div class="estado-vazio" id="estadoVazio">
+      <p>Nenhum dado de turno carregado.</p>
+      <p><strong>Como proceder:</strong> Volte à tela anterior e lance os dados da operação do turno (linha, resina consumida, tubo bom, refugos, etc.). Os cálculos aparecerão aqui em tempo real.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== ESTADO LOCAL =====
+    let dadosTurno = null;
+    let calculosAtivos = false;
+
+    // ===== RECUPERAR DADOS DA URL (sessionStorage) =====
+    function carregarDados() {
+      const dados = sessionStorage.getItem('dadosTurno');
+      if (dados) {
+        dadosTurno = JSON.parse(dados);
+        console.log('Dados carregados:', dadosTurno);
+        calcularResultados();
+      } else {
+        mostrarEstadoVazio();
+      }
+    }
+
+    // ===== VALIDAÇÃO E CÁLCULO =====
+    function calcularResultados() {
+      if (!dadosTurno) {
+        mostrarEstadoVazio();
+        return;
+      }
+
+      const d = dadosTurno;
+
+      // Validação: resina consumida inválida
+      if (!d.resina_consumida_kg || d.resina_consumida_kg <= 0) {
+        mostrarAviso('Erro: resina consumida inválida. Verifique os dados da operação.');
+        mostrarEstadoVazio();
+        return;
+      }
+
+      // Resumo da operação
+      document.getElementById('resumoLinha').textContent = d.linha || '—';
+      document.getElementById('resumoTurno').textContent = d.turno || '—';
+      document.getElementById('resumoResina').textContent = d.tipo_resina || '—';
+      document.getElementById('resumoResinaCons').textContent = (d.resina_consumida_kg || 0).toFixed(2) + ' kg';
+      document.getElementById('resumoTuboBom').textContent = (d.tubo_bom_kg || 0).toFixed(2) + ' kg';
+      document.getElementById('resumoPreco').textContent = 'R$ ' + (d.preco_resina_reais_kg || 0).toFixed(2) + '/kg';
+      document.getElementById('resumoHorasParadas').textContent = (d.horas_paradas || 0).toFixed(1) + ' h';
+      document.getElementById('resumoMotivoParada').textContent = d.motivo_parada || '—';
+
+      // Cálculos
+      const perdaTotal = d.resina_consumida_kg - d.tubo_bom_kg;
+      const perdaPercentual = (perdaTotal / d.resina_consumida_kg) * 100;
+      const custoPer = perdaTotal * d.preco_resina_reais_kg;
+
+      const refugoPartida = d.refugo_partida_kg || 0;
+      const purgaTroca = d.purga_troca_kg || 0;
+      const sobraCorte = d.sobra_corte_kg || 0;
+      const refugoTotal = refugoPartida + purgaTroca + sobraCorte;
+      const diferenca = perdaTotal - refugoTotal;
+
+      // Métricas principais
+      document.getElementById('metricaPerdaTotal').textContent = perdaTotal.toFixed(2) + ' kg';
+      document.getElementById('metricaPerdaPerc').textContent = perdaPercentual.toFixed(1) + '%';
+      document.getElementById('metricaCustoPer').textContent = 'R$ ' + custoPer.toFixed(2);
+
+      // Status de meta
+      let status, cor, texto;
+      if (perdaPercentual < 4) {
+        status = 'OK';
+        cor = 'ok';
+        texto = 'OK';
+      } else if (perdaPercentual <= 7) {
+        status = 'ATENCAO';
+        cor = 'atencao';
+        texto = 'ATENÇÃO';
+      } else {
+        status = 'CRITICO';
+        cor = 'critico';
+        texto = 'CRÍTICO';
+      }
+
+      const semaforoBtg = document.getElementById('semaforoLuz');
+      semaforoBtg.className = 'semaforo-luz ' + cor;
+      document.getElementById('statusTexto').textContent = texto;
+
+      // Composição
+      const composicaoPerc = {
+        refugo: refugoTotal > 0 ? (refugoPartida / perdaTotal) * 100 : 0,
+        purga: refugoTotal > 0 ? (purgaTroca / perdaTotal) * 100 : 0,
+        sobra: refugoTotal > 0 ? (sobraCorte / perdaTotal) * 100 : 0,
+        diferenca: perdaTotal > 0 ? (diferenca / perdaTotal) * 100 : 0
+      };
+
+      document.getElementById('compRefugoKg').textContent = refugoPartida.toFixed(2);
+      document.getElementById('compRefugoPerc').textContent = composicaoPerc.refugo.toFixed(1) + '%';
+
+      document.getElementById('compPurgaKg').textContent = purgaTroca.toFixed(2);
+      document.getElementById('compPurgaPerc').textContent = composicaoPerc.purga.toFixed(1) + '%';
+
+      document.getElementById('compSobraKg').textContent = sobraCorte.toFixed(2);
+      document.getElementById('compSobraPerc').textContent = composicaoPerc.sobra.toFixed(1) + '%';
+
+      document.getElementById('compRefugoTotalKg').textContent = refugoTotal.toFixed(2);
+      document.getElementById('compRefugoTotalPerc').textContent = ((refugoTotal / perdaTotal) * 100).toFixed(1) + '%';
+
+      document.getElementById('compDifKg').textContent = diferenca.toFixed(2);
+      document.getElementById('compDifPerc').textContent = composicaoPerc.diferenca.toFixed(1) + '%';
+
+      // Aviso de diferença não explicada
+      if (Math.abs(diferenca) > (perdaTotal * 0.05)) {
+        document.getElementById('avisoValidacao').textContent = 'Diferença não explicada detectada. Revisar pesagem?';
+        document.getElementById('avisoValidacao').classList.add('ativo');
+        document.getElementById('observacaoSec').classList.add('ativo');
+      } else {
+        document.getElementById('avisoValidacao').classList.remove('ativo');
+        document.getElementById('observacaoSec').classList.remove('ativo');
+      }
+
+      // Gráfico
+      desenharComposicao({
+        refugo: refugoPartida,
+        purga: purgaTroca,
+        sobra: sobraCorte,
+        diferenca: Math.max(0, diferenca)
+      });
+
+      // Habilitar botão confirmar
+      document.getElementById('btnConfirmar').disabled = false;
+
+      // Remover estado vazio
+      document.getElementById('estadoVazio').classList.remove('ativo');
+      calculosAtivos = true;
+
+      // Guardar cálculos para gravar depois
+      dadosTurno.perda_total_kg = perdaTotal;
+      dadosTurno.perda_percentual = perdaPercentual;
+      dadosTurno.custo_perda_reais = custoPer;
+      dadosTurno.status_meta = status;
+      dadosTurno.composicao_refugo = refugoPartida;
+      dadosTurno.composicao_purga = purgaTroca;
+      dadosTurno.composicao_sobra = sobraCorte;
+      dadosTurno.diferenca_nao_explicada = diferenca;
+    }
+
+    // ===== DESENHAR GRÁFICO =====
+    function desenharComposicao(dados) {
+      const canvas = document.getElementById('graficoComposicao');
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      const total = dados.refugo + dados.purga + dados.sobra + dados.diferenca;
+      if (total === 0) return;
+
+      const perc = {
+        refugo: (dados.refugo / total) * 100,
+        purga: (dados.purga / total) * 100,
+        sobra: (dados.sobra / total) * 100,
+        diferenca: (dados.diferenca / total) * 100
+      };
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const raio = Math.min(canvas.width, canvas.height) / 3;
+
+      const cores = {
+        refugo: '#2C6E49',
+        purga: '#1F4E5F',
+        sobra: '#9A5407',
+        diferenca: '#A32116'
+      };
+
+      let angle = -Math.PI / 2;
+      const componentes = ['refugo', 'purga', 'sobra', 'diferenca'];
+
+      componentes.forEach(comp => {
+        const angulo = (perc[comp] / 100) * 2 * Math.PI;
+        ctx.fillStyle = cores[comp];
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, raio, angle, angle + angulo);
+        ctx.lineTo(cx, cy);
+        ctx.fill();
+        angle += angulo;
+      });
+
+      // Legenda simples
+      ctx.font = '11px system-ui';
+      ctx.fillStyle = '#5C636A';
+      ctx.textAlign = 'left';
+      const legY = canvas.height - 40;
+      const legX = 10;
+
+      ctx.fillStyle = cores.refugo;
+      ctx.fillRect(legX, legY, 8, 8);
+      ctx.fillStyle = '#5C636A';
+      ctx.fillText('Refugo ' + perc.refugo.toFixed(0) + '%', legX + 12, legY + 8);
+
+      ctx.fillStyle = cores.purga;
+      ctx.fillRect(legX + 110, legY, 8, 8);
+      ctx.fillStyle = '#5C636A';
+      ctx.fillText('Purga ' + perc.purga.toFixed(0) + '%', legX + 124, legY + 8);
+
+      ctx.fillStyle = cores.sobra;
+      ctx.fillRect(legX + 200, legY, 8, 8);
+      ctx.fillStyle = '#5C636A';
+      ctx.fillText('Sobra ' + perc.sobra.toFixed(0) + '%', legX + 214, legY + 8);
+
+      ctx.fillStyle = cores.diferenca;
+      ctx.fillRect(legX + 280, legY, 8, 8);
+      ctx.fillStyle = '#5C636A';
+      ctx.fillText('Diferença ' + perc.diferenca.toFixed(0) + '%', legX + 294, legY + 8);
+    }
+
+    // ===== MOSTRAR ESTADO VAZIO =====
+    function mostrarEstadoVazio() {
+      document.getElementById('estadoVazio').classList.add('ativo');
+      document.getElementById('btnConfirmar').disabled = true;
+      calculosAtivos = false;
+    }
+
+    // ===== AVISO =====
+    function mostrarAviso(msg) {
+      const div = document.getElementById('avisoValidacao');
+      div.textContent = msg;
+      div.classList.add('ativo');
+    }
+
+    // ===== TOAST =====
+    function mostrarToast(msg, tipo) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast ativo ' + tipo;
+      setTimeout(() => {
+        toast.classList.remove('ativo');
+      }, 3000);
+    }
+
+    // ===== CONTADOR OBSERVAÇÃO =====
+    document.getElementById('observacao').addEventListener('input', (e) => {
+      const len = e.target.value.length;
+      document.getElementById('observacaoContador').textContent = len;
+      if (len > 200) {
+        e.target.value = e.target.value.substring(0, 200);
+        document.getElementById('observacaoContador').textContent = '200';
+      }
+    });
+
+    // ===== BOTÃO VOLTAR =====
+    document.getElementById('btnVoltar').addEventListener('click', () => {
+      sessionStorage.removeItem('dadosTurno');
+      window.history.back();
+    });
+
+    // ===== BOTÃO CONFIRMAR =====
+    document.getElementById('btnConfirmar').addEventListener('click', async () => {
+      if (!dadosTurno || !calculosAtivos) {
+        mostrarToast('Erro: nenhum cálculo ativo.', 'erro');
+        return;
+      }
+
+      // Adicionar observação se houver
+      const obs = document.getElementById('observacao').value.trim();
+      if (obs) {
+        dadosTurno.observacao = obs;
+      }
+
+      // Adicionar timestamp
+      dadosTurno.timestamp_criacao = new Date().toISOString();
+      dadosTurno.responsavel = 'supervisor'; // placeholder; idealmente viraria do contexto do user
+
+      // Gravar na coleção 'registros_turno'
+      try {
+        const resp = await fetch('/api/apps/empresa-tubos-meridiano-extrus-o-de-tu-2/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'registros_turno',
+            dados: dadosTurno
+          })
+        });
+
+        if (!resp.ok) {
+          throw new Error('Erro ao gravar: ' + resp.statusText);
+        }
+
+        const res = await resp.json();
+        console.log('Registro gravado:', res);
+
+        mostrarToast('Registro confirmado com sucesso!', 'sucesso');
+
+        // Limpar e voltar após 2 segundos
+        setTimeout(() => {
+          sessionStorage.removeItem('dadosTurno');
+          window.history.back();
+        }, 2000);
+      } catch (err) {
+        console.error('Erro:', err);
+        mostrarToast('Erro ao gravar: ' + err.message, 'erro');
+      }
+    });
+
+    // ===== INICIALIZAR =====
+    document.addEventListener('DOMContentLoaded', carregarDados);
+  </script>
+</body>
+</html>

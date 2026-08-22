@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comparativo por Linha e Turno</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: var(--tinta);
+    }
+
+    .filtros {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    @media (min-width: 700px) {
+      .filtros {
+        flex-direction: row;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+    }
+
+    .filtro-grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+    }
+
+    select,
+    input[type="date"] {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 12px;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      color: var(--tinta);
+      font-size: 14px;
+      min-height: 48px;
+      cursor: pointer;
+    }
+
+    select:focus,
+    input[type="date"]:focus {
+      outline: none;
+      border-color: var(--aco);
+      box-shadow: 0 0 0 2px var(--aco-claro);
+    }
+
+    .botoes-acao {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    @media (min-width: 700px) {
+      .botoes-acao {
+        margin-top: 0;
+      }
+    }
+
+    button {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 12px 16px;
+      border: 1px solid var(--regua);
+      background-color: var(--aco);
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      min-height: 48px;
+      border-radius: 0;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #163d52;
+    }
+
+    button:active {
+      background-color: #0f2a38;
+    }
+
+    button:disabled {
+      background-color: var(--grafite);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .controles-intervalo {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .intervalo-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .intervalo-item input[type="date"] {
+      min-width: 140px;
+    }
+
+    .mensagem {
+      padding: 12px;
+      border-radius: 0;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .mensagem.info {
+      background-color: var(--aco-claro);
+      color: var(--aco);
+      border: 1px solid var(--aco);
+    }
+
+    .mensagem.erro {
+      background-color: #fce4e4;
+      color: var(--critico);
+      border: 1px solid var(--critico);
+    }
+
+    .mensagem.sucesso {
+      background-color: #e8f5e9;
+      color: var(--ok);
+      border: 1px solid var(--ok);
+    }
+
+    .estado-vazio {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 24px;
+      text-align: center;
+      color: var(--grafite);
+    }
+
+    .estado-vazio p {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .tabela-wrapper {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: var(--papel);
+      border-bottom: 1px solid var(--regua);
+      padding: 12px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--regua);
+      font-family: ui-monospace, monospace;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    th.sortavel {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    th.sortavel:hover {
+      background-color: var(--regua);
+    }
+
+    th.sortavel::after {
+      content: " ⇅";
+      font-size: 11px;
+      opacity: 0.5;
+    }
+
+    th.sortavel.asc::after {
+      content: " ↑";
+      opacity: 1;
+    }
+
+    th.sortavel.desc::after {
+      content: " ↓";
+      opacity: 1;
+    }
+
+    .celula-critica {
+      background-color: #fce4e4;
+      color: var(--critico);
+      font-weight: 600;
+    }
+
+    .celula-atencao {
+      background-color: #fff8e1;
+      color: var(--alerta);
+      font-weight: 600;
+    }
+
+    .celula-ok {
+      background-color: #e8f5e9;
+      color: var(--ok);
+      font-weight: 600;
+    }
+
+    .detalhes-celula {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .valor-principal {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .valor-secundario {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .grafico-container {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .grafico-container h3 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 12px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .carregando {
+      text-align: center;
+      padding: 24px;
+      color: var(--grafite);
+      font-size: 13px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--regua);
+      border-top-color: var(--aco);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .legenda {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      font-size: 12px;
+    }
+
+    .legenda-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legenda-cor {
+      width: 24px;
+      height: 24px;
+    }
+
+    .legenda-cor.critico {
+      background-color: #fce4e4;
+      border: 1px solid var(--critico);
+    }
+
+    .legenda-cor.atencao {
+      background-color: #fff8e1;
+      border: 1px solid var(--alerta);
+    }
+
+    .legenda-cor.ok {
+      background-color: #e8f5e9;
+      border: 1px solid var(--ok);
+    }
+
+    .grid-selector-grafico {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: flex-end;
+    }
+
+    .grid-selector-grafico .filtro-grupo {
+      min-width: 180px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Comparativo por Linha e Turno</h1>
+
+    <div id="mensagens"></div>
+
+    <div class="filtros">
+      <div class="filtro-grupo">
+        <label for="filtro-linha">LINHA</label>
+        <select id="filtro-linha">
+          <option value="">Todas</option>
+          <option value="L1">L1</option>
+          <option value="L2">L2</option>
+          <option value="L3">L3</option>
+          <option value="L4">L4</option>
+          <option value="L5">L5</option>
+        </select>
+      </div>
+
+      <div class="filtro-grupo">
+        <label for="filtro-periodo">PERÍODO</label>
+        <select id="filtro-periodo">
+          <option value="7d">Últimos 7 dias</option>
+          <option value="30d">Últimos 30 dias</option>
+          <option value="mes_atual">Mês atual</option>
+          <option value="custom">Intervalo customizado</option>
+        </select>
+      </div>
+
+      <div id="filtro-custom" class="filtro-grupo" style="display: none;">
+        <label>PERÍODO CUSTOMIZADO</label>
+        <div class="controles-intervalo">
+          <div class="intervalo-item">
+            <label for="data-inicio" style="font-size: 9px;">DE</label>
+            <input type="date" id="data-inicio">
+          </div>
+          <div class="intervalo-item">
+            <label for="data-fim" style="font-size: 9px;">ATÉ</label>
+            <input type="date" id="data-fim">
+          </div>
+        </div>
+      </div>
+
+      <div class="botoes-acao">
+        <button id="btn-aplicar">Aplicar</button>
+        <button id="btn-resetar">Resetar</button>
+      </div>
+    </div>
+
+    <div id="conteudo">
+      <div class="carregando">
+        <span class="spinner"></span>
+        Carregando dados...
+      </div>
+    </div>
+
+    <div id="grafico-container-wrapper" style="display: none;">
+      <div class="grafico-container">
+        <div class="grid-selector-grafico">
+          <div class="filtro-grupo">
+            <label for="linha-grafico">LINHA PARA GRÁFICO</label>
+            <select id="linha-grafico">
+              <option value="">Selecione uma linha</option>
+              <option value="L1">L1</option>
+              <option value="L2">L2</option>
+              <option value="L3">L3</option>
+              <option value="L4">L4</option>
+              <option value="L5">L5</option>
+            </select>
+          </div>
+        </div>
+        <div style="position: relative; height: 300px;">
+          <canvas id="chart-tendencia"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="legenda">
+      <div class="legenda-item">
+        <div class="legenda-cor ok"></div>
+        <span>OK (perda &lt; 4%)</span>
+      </div>
+      <div class="legenda-item">
+        <div class="legenda-cor atencao"></div>
+        <span>Atenção (4-7%)</span>
+      </div>
+      <div class="legenda-item">
+        <div class="legenda-cor critico"></div>
+        <span>Crítico (&gt; 7%)</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Estado global
+    const state = {
+      filtroLinha: localStorage.getItem('comparativo_linha') || '',
+      filtroPeriodo: '7d',
+      dataInicio: null,
+      dataFim: null,
+      dados: null,
+      linhaGrafico: localStorage.getItem('comparativo_grafico_linha') || '',
+      chart: null
+    };
+
+    const elementos = {
+      filtroLinha: document.getElementById('filtro-linha'),
+      filtroPeriodo: document.getElementById('filtro-periodo'),
+      filtroCustom: document.getElementById('filtro-custom'),
+      dataInicio: document.getElementById('data-inicio'),
+      dataFim: document.getElementById('data-fim'),
+      btnAplicar: document.getElementById('btn-aplicar'),
+      btnResetar: document.getElementById('btn-resetar'),
+      conteudo: document.getElementById('conteudo'),
+      mensagens: document.getElementById('mensagens'),
+      linhaGrafico: document.getElementById('linha-grafico'),
+      graficoContainer: document.getElementById('grafico-container-wrapper'),
+      chartCanvas: document.getElementById('chart-tendencia')
+    };
+
+    // Inicializar filtros
+    elementos.filtroLinha.value = state.filtroLinha;
+    elementos.linhaGrafico.value = state.linhaGrafico;
+
+    // Listeners
+    elementos.filtroPeriodo.addEventListener('change', (e) => {
+      const mostrarCustom = e.target.value === 'custom';
+      elementos.filtroCustom.style.display = mostrarCustom ? 'flex' : 'none';
+    });
+
+    elementos.btnAplicar.addEventListener('click', aplicarFiltros);
+    elementos.btnResetar.addEventListener('click', resetarFiltros);
+    elementos.linhaGrafico.addEventListener('change', (e) => {
+      state.linhaGrafico = e.target.value;
+      localStorage.setItem('comparativo_grafico_linha', state.linhaGrafico);
+      if (state.dados) {
+        renderizarGrafico();
+      }
+    });
+
+    function aplicarFiltros() {
+      state.filtroLinha = elementos.filtroLinha.value;
+      state.filtroPeriodo = elementos.filtroPeriodo.value;
+      localStorage.setItem('comparativo_linha', state.filtroLinha);
+
+      if (state.filtroPeriodo === 'custom') {
+        state.dataInicio = elementos.dataInicio.value;
+        state.dataFim = elementos.dataFim.value;
+
+        if (!state.dataInicio || !state.dataFim) {
+          exibirMensagem('Informe ambas as datas do intervalo customizado', 'erro');
+          return;
+        }
+
+        const inicio = new Date(state.dataInicio);
+        const fim = new Date(state.dataFim);
+
+        if (inicio >= fim) {
+          exibirMensagem('Data inicial deve ser menor que data final', 'erro');
+          return;
+        }
+
+        const hoje = new Date();
+        const umAnoAtras = new Date(hoje);
+        umAnoAtras.setFullYear(umAnoAtras.getFullYear() - 1);
+
+        if (inicio < umAnoAtras || fim > hoje) {
+          exibirMensagem('Intervalo deve estar nos últimos 365 dias', 'erro');
+          return;
+        }
+      }
+
+      carregarDados();
+    }
+
+    function resetarFiltros() {
+      state.filtroLinha = '';
+      state.filtroPeriodo = '7d';
+      state.dataInicio = null;
+      state.dataFim = null;
+      state.linhaGrafico = '';
+
+      elementos.filtroLinha.value = '';
+      elementos.filtroPeriodo.value = '7d';
+      elementos.filtroCustom.style.display = 'none';
+      elementos.dataInicio.value = '';
+      elementos.dataFim.value = '';
+      elementos.linhaGrafico.value = '';
+
+      localStorage.removeItem('comparativo_linha');
+      localStorage.removeItem('comparativo_grafico_linha');
+
+      carregarDados();
+    }
+
+    async function carregarDados() {
+      elementos.conteudo.innerHTML = '<div class="carregando"><span class="spinner"></span>Carregando dados...</div>';
+      exibirMensagem('', '');
+
+      try {
+        let url = '/api/apps/empresa-tubos-meridiano-extrus-o-de-tu-2/records?tipo=registros_turno';
+
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Erro HTTP ${response.status}`);
+        }
+
+        const json = await response.json();
+        const registros = json.registros || [];
+
+        // Agregar dados
+        const dadosAgregados = agregarPorLinhaeTurno(registros);
+        state.dados = dadosAgregados;
+
+        renderizarTabela(dadosAgregados);
+        elementos.graficoContainer.style.display = state.linhaGrafico ? 'block' : 'block';
+
+        if (state.linhaGrafico) {
+          renderizarGrafico();
+        }
+
+      } catch (erro) {
+        exibirMensagem(
+          `Erro ao carregar dados: ${erro.message}. Verifique a conexão com o servidor ou tente novamente.`,
+          'erro'
+        );
+        elementos.conteudo.innerHTML = `
+          <div class="estado-vazio">
+            <p>Não foi possível carregar os dados.</p>
+            <p>Certifique-se de que o servidor está disponível e tente novamente.</p>
+          </div>
+        `;
+      }
+    }
+
+    function agregarPorLinhaeTurno(registros) {
+      const agora = new Date();
+      const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+      const dia7 = new Date(hoje);
+      dia7.setDate(dia7.getDate() - 7);
+      const dia30 = new Date(hoje);
+      dia30.setDate(dia30.getDate() - 30);
+
+      const mapaPeriodo = {
+        mes_atual: {
+          inicio: new Date(hoje.getFullYear(), hoje.getMonth(), 1),
+          fim: new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
+        }
+      };
+
+      const agreagado = {};
+
+      registros.forEach(reg => {
+        const dados = reg.dados || {};
+        const linha = dados.linha || 'N/A';
+        const turno = dados.turno || 'N/A';
+        const dataReg = new Date(dados.data || agora);
+        dataReg.setHours(0, 0, 0, 0);
+
+        const perdaPct = parseFloat(dados.perda_percentual) || 0;
+        const key = `${linha}|${turno}`;
+
+        if (!agreagado[key]) {
+          agreagado[key] = {
+            linha,
+            turno,
+            periodos: {
+              '7d': { valores: [], registros: 0 },
+              '30d': { valores: [], registros: 0 },
+              'mes_atual': { valores: [], registros: 0 }
+            },
+            tendencia30: []
+          };
+        }
+
+        // 7 dias
+        if (dataReg >= dia7) {
+          agreagado[key].periodos['7d'].valores.push(perdaPct);
+          agreagado[key].periodos['7d'].registros += 1;
+        }
+
+        // 30 dias
+        if (dataReg >= dia30) {
+          agreagado[key].periodos['30d'].valores.push(perdaPct);
+          agreagado[key].periodos['30d'].registros += 1;
+        }
+
+        // Mês atual
+        if (dataReg >= mapaPeriodo.mes_atual.inicio && dataReg <= mapaPeriodo.mes_atual.fim) {
+          agreagado[key].periodos['mes_atual'].valores.push(perdaPct);
+          agreagado[key].periodos['mes_atual'].registros += 1;
+        }
+
+        // Tendência 30 dias
+        if (dataReg >= dia30) {
+          agreagado[key].tendencia30.push({ data: dataReg, perda: perdaPct });
+        }
+      });
+
+      // Calcular médias
+      Object.keys(agreagado).forEach(key => {
+        Object.keys(agreagado[key].periodos).forEach(periodo => {
+          const dados = agreagado[key].periodos[periodo];
+          if (dados.valores.length > 0) {
+            dados.media = dados.valores.reduce((a, b) => a + b, 0) / dados.valores.length;
+          } else {
+            dados.media = 0;
+          }
+        });
+
+        // Ordenar tendência
+        agreagado[key].tendencia30.sort((a, b) => a.data - b.data);
+      });
+
+      return Object.values(agreagado);
+    }
+
+    function renderizarTabela(dados) {
+      if (!dados || dados.length === 0) {
+        elementos.conteudo.innerHTML = `
+          <div class="estado-vazio">
+            <p>Nenhum registro encontrado para os filtros selecionados.</p>
+            <p>Verifique os filtros ou crie novos registros de turno para visualizar o comparativo.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Filtrar por linha
+      let filtrados = dados;
+      if (state.filtroLinha) {
+        filtrados = dados.filter(d => d.linha === state.filtroLinha);
+      }
+
+      if (filtrados.length === 0) {
+        elementos.conteudo.innerHTML = `
+          <div class="estado-vazio">
+            <p>Nenhum registro encontrado para a linha selecionada.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Ordenar por perda decrescente por padrão
+      filtrados.sort((a, b) => {
+        const perdaA = a.periodos['30d'].media || 0;
+        const perdaB = b.periodos['30d'].media || 0;
+        return perdaB - perdaA;
+      });
+
+      let html = `
+        <div class="tabela-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>LINHA</th>
+                <th>TURNO</th>
+                <th class="sortavel asc" data-sort="7d">PERDA % (7D)</th>
+                <th class="sortavel" data-sort="30d">PERDA % (30D)</th>
+                <th class="sortavel" data-sort="mes">PERDA % (MÊS)</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filtrados.forEach(item => {
+        const perda7d = item.periodos['7d'].media.toFixed(2);
+        const perda30d = item.periodos['30d'].media.toFixed(2);
+        const perdaMes = item.periodos['mes_atual'].media.toFixed(2);
+        const reg7d = item.periodos['7d'].registros;
+        const reg30d = item.periodos['30d'].registros;
+        const regMes = item.periodos['mes_atual'].registros;
+
+        const classe7d = obterClasse(perda7d);
+        const classe30d = obterClasse(perda30d);
+        const classeMes = obterClasse(perdaMes);
+
+        html += `
+          <tr>
+            <td>${item.linha}</td>
+            <td>${item.turno}</td>
+            <td class="${classe7d}" data-sort-value="${perda7d}">
+              <div class="detalhes-celula">
+                <span class="valor-principal">${perda7d}%</span>
+                <span class="valor-secundario">${reg7d} reg.</span>
+              </div>
+            </td>
+            <td class="${classe30d}" data-sort-value="${perda30d}">
+              <div class="detalhes-celula">
+                <span class="valor-principal">${perda30d}%</span>
+                <span class="valor-secundario">${reg30d} reg.</span>
+              </div>
+            </td>
+            <td class="${classeMes}" data-sort-value="${perdaMes}">
+              <div class="detalhes-celula">
+                <span class="valor-principal">${perdaMes}%</span>
+                <span class="valor-secundario">${regMes} reg.</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      elementos.conteudo.innerHTML = html;
+
+      // Listener de sort
+      document.querySelectorAll('th.sortavel').forEach(th => {
+        th.addEventListener('click', () => {
+          ordenarTabela(th);
+        });
+      });
+    }
+
+    function obterClasse(perdaPct) {
+      const valor = parseFloat(perdaPct);
+      if (valor > 7) return 'celula-critica';
+      if (valor >= 4) return 'celula-atencao';
+      return 'celula-ok';
+    }
+
+    function ordenarTabela(th) {
+      const tabela = th.closest('table');
+      const tbody = tabela.querySelector('tbody');
+      const linhas = Array.from(tbody.querySelectorAll('tr'));
+      const tipo = th.dataset.sort;
+      const ehAsc = th.classList.contains('asc');
+
+      linhas.sort((a, b) => {
+        let indexColuna = 0;
+        if (tipo === '7d') indexColuna = 2;
+        else if (tipo === '30d') indexColuna = 3;
+        else if (tipo === 'mes') indexColuna = 4;
+
+        const valorA = parseFloat(a.children[indexColuna].dataset.sortValue || 0);
+        const valorB = parseFloat(b.children[indexColuna].dataset.sortValue || 0);
+
+        return ehAsc ? valorA - valorB : valorB - valorA;
+      });
+
+      linhas.forEach(linha => tbody.appendChild(linha));
+
+      // Atualizar estado do header
+      document.querySelectorAll('th.sortavel').forEach(h => {
+        h.classList.remove('asc', 'desc');
+      });
+      th.classList.toggle('asc', !ehAsc);
+      th.classList.toggle('desc', ehAsc);
+    }
+
+    function renderizarGrafico() {
+      if (!state.linhaGrafico || !state.dados) {
+        return;
+      }
+
+      const item = state.dados.find(d => d.linha === state.linhaGrafico);
+      if (!item || item.tendencia30.length === 0) {
+        return;
+      }
+
+      // Agrupar por dia
+      const mapaDias = {};
+      item.tendencia30.forEach(d => {
+        const chave = d.data.toISOString().split('T')[0];
+        if (!mapaDias[chave]) {
+          mapaDias[chave] = [];
+        }
+        mapaDias[chave].push(d.perda);
+      });
+
+      const dias = Object.keys(mapaDias).sort();
+      const medias = dias.map(dia => {
+        const valores = mapaDias[dia];
+        return (valores.reduce((a, b) => a + b, 0) / valores.length).toFixed(2);
+      });
+
+      if (state.chart) {
+        state.chart.destroy();
+      }
+
+      // Canvas
+      const ctx = elementos.chartCanvas.getContext('2d');
+
+      // Criar Chart.js simplificado (sem CDN)
+      state.chart = criarGraficoLinha(ctx, dias, medias);
+    }
+
+    function criarGraficoLinha(ctx, labels, dados) {
+      // Implementação simplificada de gráfico de linha
+      const width = ctx.canvas.offsetWidth || 400;
+      const height = ctx.canvas.offsetHeight || 300;
+
+      ctx.canvas.width = width;
+      ctx.canvas.height = height;
+
+      const padding = 40;
+      const graphWidth = width - 2 * padding;
+      const graphHeight = height - 2 * padding;
+
+      // Encontrar min/max
+      const valores = dados.map(v => parseFloat(v));
+      const max = Math.max(...valores, 8);
+      const min = Math.min(...valores, 0);
+      const range = max - min || 1;
+
+      // Limpar
+      ctx.fillStyle = '#FCFDFB';
+      ctx.fillRect(0, 0, width, height);
+
+      // Desenhar grid
+      ctx.strokeStyle = '#C6CBC3';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 5; i++) {
+        const y = padding + (graphHeight / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(width - padding, y);
+        ctx.stroke();
+
+        const valor = (max - (range / 5) * i).toFixed(1);
+        ctx.fillStyle = '#5C636A';
+        ctx.font = '11px system-ui';
+        ctx.textAlign = 'right';
+        ctx.fillText(valor, padding - 5, y + 4);
+      }
+
+      // Eixos
+      ctx.strokeStyle = '#14171A';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.stroke();
+
+      // Plotar pontos e linhas
+      ctx.strokeStyle = '#1F4E5F';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      dados.forEach((valor, index) => {
+        const x = padding + (graphWidth / (dados.length - 1 || 1)) * index;
+        const y = height - padding - ((parseFloat(valor) - min) / range) * graphHeight;
+
+        if (index === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+
+      // Desenhar pontos
+      ctx.fillStyle = '#1F4E5F';
+      dados.forEach((valor, index) => {
+        const x = padding + (graphWidth / (dados.length - 1 || 1)) * index;
+        const y = height - padding - ((parseFloat(valor) - min) / range) * graphHeight;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Labels X (a cada 5 dias)
+      ctx.fillStyle = '#5C636A';
+      ctx.font = '10px system-ui';
+      ctx.textAlign = 'center';
+      const intervalo = Math.ceil(labels.length / 6);
+      labels.forEach((label, index) => {
+        if (index % intervalo === 0) {
+          const x = padding + (graphWidth / (labels.length - 1 || 1)) * index;
+          ctx.fillText(label, x, height - padding + 20);
+        }
+      });
+
+      // Título dos eixos
+      ctx.fillStyle = '#5C636A';
+      ctx.font = '10px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('PERDA %', padding - 25, padding - 15);
+      ctx.fillText('DIAS (últimos 30)', width / 2, height - 5);
+
+      return { destroy: () => {} };
+    }
+
+    function exibirMensagem(texto, tipo) {
+      if (!texto) {
+        elementos.mensagens.innerHTML = '';
+        return;
+      }
+
+      elementos.mensagens.innerHTML = `
+        <div class="mensagem ${tipo}">
+          ${texto}
+        </div>
+      `;
+    }
+
+    // Carregar na init
+    carregarDados();
+  </script>
+</body>
+</html>

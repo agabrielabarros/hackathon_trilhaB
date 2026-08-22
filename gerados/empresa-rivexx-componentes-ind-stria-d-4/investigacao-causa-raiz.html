@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investigação de Causa Raiz</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+      line-height: 1.5;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .bloco {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .bloco-titulo {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .campo-grupo {
+      margin-bottom: 1.5rem;
+    }
+
+    .campo-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .campo-label.obrigatorio::after {
+      content: ' *';
+      color: var(--critico);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      font-family: system-ui;
+      font-size: 14px;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      color: var(--tinta);
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--aco);
+      background-color: var(--aco-claro);
+    }
+
+    input[readonly],
+    textarea[readonly] {
+      background-color: #F0F0F0;
+      color: var(--grafite);
+      cursor: not-allowed;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      font-family: system-ui;
+    }
+
+    .char-counter {
+      font-size: 11px;
+      color: var(--grafite);
+      margin-top: 0.25rem;
+      text-align: right;
+    }
+
+    .char-counter.alerta {
+      color: var(--alerta);
+    }
+
+    .char-counter.critico {
+      color: var(--critico);
+    }
+
+    .botao {
+      padding: 0.75rem 1.5rem;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none;
+      cursor: pointer;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .botao-primario {
+      background-color: var(--aco);
+      color: white;
+    }
+
+    .botao-primario:hover:not(:disabled) {
+      background-color: #163A4A;
+    }
+
+    .botao-primario:disabled {
+      background-color: var(--grafite);
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .botao-secundario {
+      background-color: transparent;
+      color: var(--aco);
+      border: 1px solid var(--aco);
+    }
+
+    .botao-secundario:hover:not(:disabled) {
+      background-color: var(--aco-claro);
+    }
+
+    .botao-secundario:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .botao-perigo {
+      background-color: var(--critico);
+      color: white;
+    }
+
+    .botao-perigo:hover:not(:disabled) {
+      background-color: #8B1B0D;
+    }
+
+    .botao-sucesso {
+      background-color: var(--ok);
+      color: white;
+    }
+
+    .botao-sucesso:hover {
+      background-color: #245A3B;
+    }
+
+    .botao-grupo {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+
+    .mensagem {
+      padding: 1rem;
+      border-radius: 0;
+      margin-bottom: 1.5rem;
+      font-size: 14px;
+      display: none;
+    }
+
+    .mensagem.visivel {
+      display: block;
+    }
+
+    .mensagem-sucesso {
+      background-color: #E8F5E9;
+      border-left: 4px solid var(--ok);
+      color: #1B5E20;
+    }
+
+    .mensagem-erro {
+      background-color: #FFEBEE;
+      border-left: 4px solid var(--critico);
+      color: #B71C1C;
+    }
+
+    .mensagem-aviso {
+      background-color: #FFF3E0;
+      border-left: 4px solid var(--alerta);
+      color: #6D4C41;
+    }
+
+    .mensagem-info {
+      background-color: #E3F2FD;
+      border-left: 4px solid var(--aco);
+      color: #0D47A1;
+    }
+
+    .secao-leitura {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .item-leitura {
+      background-color: #F9F9F7;
+      padding: 1rem;
+      border: 1px solid var(--regua);
+    }
+
+    .item-leitura-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .item-leitura-valor {
+      font-size: 14px;
+      font-family: ui-monospace, monospace;
+      color: var(--tinta);
+      word-break: break-word;
+    }
+
+    .lista-evidencias {
+      margin-top: 1.5rem;
+    }
+
+    .evidencia-item {
+      background-color: #F9F9F7;
+      border-left: 4px solid var(--aco);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .evidencia-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .evidencia-meta {
+      font-size: 11px;
+      color: var(--grafite);
+      font-family: ui-monospace, monospace;
+    }
+
+    .evidencia-tipo {
+      display: inline-block;
+      background-color: var(--aco-claro);
+      color: var(--aco);
+      padding: 0.25rem 0.5rem;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .evidencia-descricao {
+      font-size: 14px;
+      margin: 0.5rem 0;
+      line-height: 1.6;
+    }
+
+    .formulario-evidencia {
+      background-color: var(--aco-claro);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid var(--aco);
+    }
+
+    .grid-evidencia {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-conclusao {
+      text-align: center;
+      padding: 2rem 1rem;
+      background-color: #E8F5E9;
+      border: 1px solid var(--ok);
+      border-radius: 0;
+    }
+
+    .status-conclusao h2 {
+      font-size: 18px;
+      color: var(--ok);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+    }
+
+    .status-conclusao-detalhe {
+      font-size: 13px;
+      color: var(--grafite);
+      margin-bottom: 0.5rem;
+      font-family: ui-monospace, monospace;
+    }
+
+    .status-conclusao-acoes {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .aviso-pendencia {
+      background-color: #FFF3E0;
+      border-left: 4px solid var(--alerta);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-size: 14px;
+      color: #6D4C41;
+    }
+
+    .secao-desativada {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .validacao-erro {
+      border-color: var(--critico) !important;
+      background-color: #FFEBEE;
+    }
+
+    .resumo-investigacao {
+      background-color: #F9F9F7;
+      padding: 1.5rem;
+      border-left: 4px solid var(--ok);
+      margin-bottom: 1.5rem;
+    }
+
+    .resumo-item {
+      margin-bottom: 1rem;
+    }
+
+    .resumo-item-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 0.25rem;
+    }
+
+    .resumo-item-valor {
+      font-size: 14px;
+      color: var(--tinta);
+    }
+
+    @media (max-width: 700px) {
+      .botao-grupo {
+        flex-direction: column;
+      }
+
+      .botao {
+        width: 100%;
+      }
+
+      .secao-leitura {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-evidencia {
+        grid-template-columns: 1fr;
+      }
+
+      .evidencia-header {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="mensagem-app" class="mensagem"></div>
+
+    <div id="conteudo-principal">
+      <!-- Seção: Não Conformidade (Somente Leitura) -->
+      <div class="bloco" id="bloco-nc">
+        <span class="bloco-titulo">NÃO CONFORMIDADE</span>
+        <div class="secao-leitura" id="secao-nc-leitura">
+          <!-- Preenchida dinamicamente via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Seção: Seleção de Metodologia -->
+      <div class="bloco" id="bloco-metodologia">
+        <span class="bloco-titulo">Metodologia de Investigação</span>
+        <div class="campo-grupo">
+          <label class="campo-label obrigatorio">Metodologia</label>
+          <select id="metodologia">
+            <option value="">-- Selecione uma metodologia --</option>
+            <option value="5-porques">5 Porquês</option>
+            <option value="fishbone">Diagrama de Fishbone</option>
+            <option value="fmea">Análise FMEA</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Seção: Hipótese de Causa -->
+      <div class="bloco" id="bloco-hipotese">
+        <span class="bloco-titulo">Hipótese de Causa Raiz</span>
+        <div class="campo-grupo">
+          <label class="campo-label obrigatorio">Hipótese de Causa</label>
+          <textarea id="hipotese-causa" placeholder="Descreva sua suspeita inicial sobre a causa da não conformidade..." maxlength="1000"></textarea>
+          <div class="char-counter">
+            <span id="hipotese-count">0</span> / 1000 caracteres
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Evidências -->
+      <div class="bloco" id="bloco-evidencias">
+        <span class="bloco-titulo">Evidências e Investigação</span>
+
+        <div class="formulario-evidencia">
+          <span class="bloco-titulo" style="color: var(--aco); margin-bottom: 1rem;">Adicionar Nova Evidência</span>
+          <div class="grid-evidencia">
+            <div class="campo-grupo">
+              <label class="campo-label obrigatorio">Data</label>
+              <input type="date" id="evidencia-data">
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label obrigatorio">Tipo</label>
+              <select id="evidencia-tipo">
+                <option value="">-- Selecione o tipo --</option>
+                <option value="inspecao-visual">Inspeção Visual</option>
+                <option value="teste">Teste</option>
+                <option value="entrevista">Entrevista</option>
+                <option value="consulta-registro">Consulta Registro</option>
+              </select>
+            </div>
+            <div class="campo-grupo">
+              <label class="campo-label obrigatorio">Responsável</label>
+              <input type="text" id="evidencia-responsavel" placeholder="Seu nome" value="Analista Qualidade">
+            </div>
+          </div>
+          <div class="campo-grupo">
+            <label class="campo-label obrigatorio">Descrição da Evidência</label>
+            <textarea id="evidencia-descricao" placeholder="Descreva detalhadamente a evidência coletada..." maxlength="500"></textarea>
+            <div class="char-counter">
+              <span id="evidencia-count">0</span> / 500 caracteres
+            </div>
+          </div>
+          <button class="botao botao-primario" id="btn-adicionar-evidencia">Adicionar Evidência</button>
+        </div>
+
+        <div class="lista-evidencias" id="lista-evidencias">
+          <!-- Evidências adicionadas são exibidas aqui -->
+        </div>
+      </div>
+
+      <!-- Seção: Causa Raiz Confirmada -->
+      <div class="bloco" id="bloco-causa-confirmada">
+        <span class="bloco-titulo">Confirmação de Causa Raiz</span>
+        <div class="campo-grupo">
+          <label class="campo-label obrigatorio">Causa Raiz Confirmada?</label>
+          <select id="causa-confirmada">
+            <option value="">-- Selecione uma opção --</option>
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Seção: Narrativa Final (Condicional) -->
+      <div class="bloco" id="bloco-narrativa" style="display: none;">
+        <span class="bloco-titulo">Narrativa Final</span>
+        <div class="aviso-pendencia">
+          Descreva a conclusão da investigação, a causa raiz confirmada e as ações recomendadas para encerramento.
+        </div>
+        <div class="campo-grupo">
+          <label class="campo-label obrigatorio">Narrativa Final da Investigação</label>
+          <textarea id="narrativa-final" placeholder="Escreva a narrativa final da investigação..." maxlength="2000"></textarea>
+          <div class="char-counter">
+            <span id="narrativa-count">0</span> / 2000 caracteres
+          </div>
+        </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="botao-grupo" id="grupo-botoes-principal">
+        <button class="botao botao-primario" id="btn-salvar-investigacao" disabled>Salvar Investigação</button>
+        <button class="botao botao-secundario" id="btn-cancelar">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- Tela de Conclusão -->
+    <div id="tela-conclusao" style="display: none;">
+      <div class="bloco">
+        <div class="status-conclusao">
+          <h2>✓ Investigação Concluída</h2>
+          <div class="status-conclusao-detalhe" id="conclusao-detalhes">
+            <!-- Preenchido dinamicamente -->
+          </div>
+          <div class="status-conclusao-acoes">
+            <button class="botao botao-primario" id="btn-visualizar-resumo">Visualizar Resumo</button>
+            <button class="botao botao-secundario" id="btn-nova-investigacao">Nova Investigação</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumo Final -->
+    <div id="resumo-final" style="display: none;">
+      <div class="bloco">
+        <span class="bloco-titulo">Resumo da Investigação</span>
+        <div class="resumo-investigacao" id="conteudo-resumo">
+          <!-- Preenchido dinamicamente -->
+        </div>
+        <button class="botao botao-secundario" id="btn-retornar">Retornar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Estado global da aplicação
+    const estadoApp = {
+      naoConformidadeAtual: null,
+      investigacao: {
+        nao_conformidade_id: null,
+        metodologia: '',
+        causa_raiz_suspeita: '',
+        evidencias: [],
+        causa_raiz_confirmada: '',
+        narrativa_final: ''
+      },
+      usuarioLogado: 'Analista Qualidade',
+      turnoAtual: 'Não definido',
+      investigacaoConcluida: false,
+      investigacaoId: null
+    };
+
+    // Inicialização
+    function iniciar() {
+      carregarNaoConformidadeDoQuery();
+      setupListeners();
+      atualizarEstadoUI();
+    }
+
+    function carregarNaoConformidadeDoQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const ncId = params.get('nc_id');
+
+      if (!ncId) {
+        mostrarMensagem('Nenhuma não conformidade selecionada. Retorne à lista.', 'erro');
+        document.getElementById('conteudo-principal').style.display = 'none';
+        return;
+      }
+
+      fetch(`/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records?tipo=nao_conformidades`)
+        .then(r => r.json())
+        .then(data => {
+          const nc = data.registros.find(reg => reg.id === ncId);
+          if (nc) {
+            estadoApp.naoConformidadeAtual = nc.dados;
+            estadoApp.naoConformidadeAtual.id = nc.id;
+            estadoApp.investigacao.nao_conformidade_id = nc.id;
+            preencherSecaoNC();
+          } else {
+            mostrarMensagem('Não conformidade não encontrada.', 'erro');
+          }
+        })
+        .catch(err => {
+          mostrarMensagem(`Erro ao carregar não conformidade: ${err.message}. Verifique a conexão.`, 'erro');
+        });
+    }
+
+    function preencherSecaoNC() {
+      const nc = estadoApp.naoConformidadeAtual;
+      const secao = document.getElementById('secao-nc-leitura');
+      secao.innerHTML = `
+        <div class="item-leitura">
+          <span class="item-leitura-label">ID Não Conformidade</span>
+          <span class="item-leitura-valor">${nc.id || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Lote Afetado</span>
+          <span class="item-leitura-valor">${nc.lote_afetado || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Equipamento</span>
+          <span class="item-leitura-valor">${nc.equipamento || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Operador</span>
+          <span class="item-leitura-valor">${nc.operador || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Turno</span>
+          <span class="item-leitura-valor">${nc.turno || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Defeito</span>
+          <span class="item-leitura-valor">${nc.descricao_defeito || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Matéria-Prima</span>
+          <span class="item-leitura-valor">${nc.materia_prima || 'N/A'}</span>
+        </div>
+        <div class="item-leitura">
+          <span class="item-leitura-label">Data Registro</span>
+          <span class="item-leitura-valor">${nc.data_registro || 'N/A'}</span>
+        </div>
+      `;
+    }
+
+    function setupListeners() {
+      document.getElementById('metodologia').addEventListener('change', (e) => {
+        estadoApp.investigacao.metodologia = e.target.value;
+        atualizarEstadoUI();
+      });
+
+      document.getElementById('hipotese-causa').addEventListener('input', (e) => {
+        estadoApp.investigacao.causa_raiz_suspeita = e.target.value;
+        document.getElementById('hipotese-count').textContent = e.target.value.length;
+        atualizarEstadoUI();
+      });
+
+      document.getElementById('evidencia-data').addEventListener('change', () => {
+        validarFormularioEvidencia();
+      });
+
+      document.getElementById('evidencia-tipo').addEventListener('change', () => {
+        validarFormularioEvidencia();
+      });
+
+      document.getElementById('evidencia-descricao').addEventListener('input', (e) => {
+        document.getElementById('evidencia-count').textContent = e.target.value.length;
+      });
+
+      document.getElementById('btn-adicionar-evidencia').addEventListener('click', adicionarEvidencia);
+
+      document.getElementById('causa-confirmada').addEventListener('change', (e) => {
+        estadoApp.investigacao.causa_raiz_confirmada = e.target.value;
+        atualizarExibicaoNarrativa();
+        atualizarEstadoUI();
+      });
+
+      document.getElementById('narrativa-final').addEventListener('input', (e) => {
+        estadoApp.investigacao.narrativa_final = e.target.value;
+        document.getElementById('narrativa-count').textContent = e.target.value.length;
+        atualizarEstadoUI();
+      });
+
+      document.getElementById('btn-salvar-investigacao').addEventListener('click', salvarInvestigacao);
+      document.getElementById('btn-cancelar').addEventListener('click', voltarParaLista);
+      document.getElementById('btn-visualizar-resumo').addEventListener('click', exibirResumo);
+      document.getElementById('btn-nova-investigacao').addEventListener('click', novaInvestigacao);
+      document.getElementById('btn-retornar').addEventListener('click', voltarParaLista);
+    }
+
+    function atualizarExibicaoNarrativa() {
+      const blocoNarrativa = document.getElementById('bloco-narrativa');
+      const causaConfirmada = document.getElementById('causa-confirmada').value;
+
+      if (causaConfirmada === 'sim') {
+        blocoNarrativa.style.display = 'block';
+      } else {
+        blocoNarrativa.style.display = 'none';
+        document.getElementById('narrativa-final').value = '';
+        estadoApp.investigacao.narrativa_final = '';
+      }
+    }
+
+    function validarFormularioEvidencia() {
+      const data = document.getElementById('evidencia-data').value;
+      const tipo = document.getElementById('evidencia-tipo').value;
+      const descricao = document.getElementById('evidencia-descricao').value;
+      const responsavel = document.getElementById('evidencia-responsavel').value;
+
+      const btnAdicionar = document.getElementById('btn-adicionar-evidencia');
+      const valido = data && tipo && descricao.trim().length > 0 && responsavel.trim().length > 0;
+      btnAdicionar.disabled = !valido;
+    }
+
+    function adicionarEvidencia() {
+      const data = document.getElementById('evidencia-data').value;
+      const tipo = document.getElementById('evidencia-tipo').value;
+      const descricao = document.getElementById('evidencia-descricao').value;
+      const responsavel = document.getElementById('evidencia-responsavel').value;
+
+      if (!data || !tipo || !descricao.trim() || !responsavel.trim()) {
+        mostrarMensagem('Preencha todos os campos de evidência.', 'erro');
+        return;
+      }
+
+      const evidencia = {
+        data: data,
+        tipo: tipo,
+        descricao: descricao,
+        responsavel: responsavel,
+        timestamp: new Date().toISOString(),
+        ativo: true
+      };
+
+      estadoApp.investigacao.evidencias.push(evidencia);
+
+      gravarEvidenciaNoBackend(evidencia);
+
+      // Limpar formulário
+      document.getElementById('evidencia-data').value = '';
+      document.getElementById('evidencia-tipo').value = '';
+      document.getElementById('evidencia-descricao').value = '';
+      document.getElementById('evidencia-responsavel').value = 'Analista Qualidade';
+      document.getElementById('evidencia-count').textContent = '0';
+
+      exibirListaEvidencias();
+      atualizarEstadoUI();
+      mostrarMensagem('Evidência adicionada com sucesso.', 'sucesso');
+    }
+
+    function gravarEvidenciaNoBackend(evidencia) {
+      const dadosEvidencia = {
+        nao_conformidade_id: estadoApp.naoConformidadeAtual.id,
+        data: evidencia.data,
+        tipo: evidencia.tipo,
+        descricao: evidencia.descricao,
+        responsavel: evidencia.responsavel,
+        timestamp: evidencia.timestamp,
+        ativo: true
+      };
+
+      fetch('/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'evidencias',
+          dados: dadosEvidencia
+        })
+      })
+      .catch(err => {
+        console.error('Erro ao gravar evidência:', err);
+      });
+    }
+
+    function exibirListaEvidencias() {
+      const lista = document.getElementById('lista-evidencias');
+
+      if (estadoApp.investigacao.evidencias.length === 0) {
+        lista.innerHTML = '<p style="color: var(--grafite); font-style: italic;">Nenhuma evidência registrada ainda.</p>';
+        return;
+      }
+
+      lista.innerHTML = estadoApp.investigacao.evidencias.map((ev, idx) => {
+        const tipoLabel = {
+          'inspecao-visual': 'Inspeção Visual',
+          'teste': 'Teste',
+          'entrevista': 'Entrevista',
+          'consulta-registro': 'Consulta Registro'
+        }[ev.tipo] || ev.tipo;
+
+        const dataFormatada = new Date(ev.timestamp).toLocaleString('pt-BR');
+
+        return `
+          <div class="evidencia-item">
+            <div class="evidencia-header">
+              <div>
+                <span class="evidencia-tipo">${tipoLabel}</span>
+              </div>
+              <div class="evidencia-meta">
+                ${ev.data} | ${ev.responsavel} | ${dataFormatada}
+              </div>
+            </div>
+            <div class="evidencia-descricao">${ev.descricao}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function atualizarEstadoUI() {
+      const temMetodologia = estadoApp.investigacao.metodologia.length > 0;
+      const temHipotese = estadoApp.investigacao.causa_raiz_suspeita.trim().length > 0;
+      const temEvidencias = estadoApp.investigacao.evidencias.length > 0;
+      const temCausaConfirmada = estadoApp.investigacao.causa_raiz_confirmada === 'sim';
+      const temNarrativa = estadoApp.investigacao.narrativa_final.trim().length > 0;
+
+      const btnSalvar = document.getElementById('btn-salvar-investigacao');
+      const podeHabilitarSalvar = temMetodologia && temHipotese && temEvidencias && temCausaConfirmada && temNarrativa;
+      btnSalvar.disabled = !podeHabilitarSalvar;
+    }
+
+    function salvarInvestigacao() {
+      if (!estadoApp.naoConformidadeAtual) {
+        mostrarMensagem('Erro: Nenhuma não conformidade carregada.', 'erro');
+        return;
+      }
+
+      const investigacao = {
+        nao_conformidade_id: estadoApp.naoConformidadeAtual.id,
+        metodologia: estadoApp.investigacao.metodologia,
+        causa_raiz_suspeita: estadoApp.investigacao.causa_raiz_suspeita,
+        causa_raiz_confirmada: estadoApp.investigacao.causa_raiz_confirmada,
+        narrativa_final: estadoApp.investigacao.narrativa_final,
+        data_inicio: new Date().toISOString(),
+        data_conclusao: estadoApp.investigacao.causa_raiz_confirmada === 'sim' ? new Date().toISOString() : null,
+        analista: estadoApp.usuarioLogado,
+        turno: estadoApp.naoConformidadeAtual.turno || 'Não definido',
+        equipamento: estadoApp.naoConformidadeAtual.equipamento || 'Não definido',
+        status: 'Concluída',
+        evidencia_ids: estadoApp.investigacao.evidencias.map((_, idx) => idx),
+        total_evidencias: estadoApp.investigacao.evidencias.length
+      };
+
+      fetch('/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'investigacoes',
+          dados: investigacao
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        estadoApp.investigacaoId = data.id;
+        estadoApp.investigacaoConcluida = true;
+        mostrarTelaConclusao();
+      })
+      .catch(err => {
+        mostrarMensagem(`Erro ao salvar: ${err.message}. Tente novamente.`, 'erro');
+      });
+    }
+
+    function mostrarTelaConclusao() {
+      document.getElementById('conteudo-principal').style.display = 'none';
+      document.getElementById('tela-conclusao').style.display = 'block';
+
+      const dataHora = new Date().toLocaleString('pt-BR');
+      document.getElementById('conclusao-detalhes').innerHTML = `
+        <div>Investigação registrada com sucesso.</div>
+        <div>Data/Hora: ${dataHora}</div>
+        <div>Analista: ${estadoApp.usuarioLogado}</div>
+        <div>Total de Evidências: ${estadoApp.investigacao.evidencias.length}</div>
+      `;
+    }
+
+    function exibirResumo() {
+      document.getElementById('tela-conclusao').style.display = 'none';
+      document.getElementById('resumo-final').style.display = 'block';
+
+      const nc = estadoApp.naoConformidadeAtual;
+      const inv = estadoApp.investigacao;
+
+      const metodologiaLabel = {
+        '5-porques': '5 Porquês',
+        'fishbone': 'Diagrama de Fishbone',
+        'fmea': 'Análise FMEA'
+      }[inv.metodologia] || inv.metodologia;
+
+      let htmlEvidencias = inv.evidencias.map(ev => {
+        const tipoLabel = {
+          'inspecao-visual': 'Inspeção Visual',
+          'teste': 'Teste',
+          'entrevista': 'Entrevista',
+          'consulta-registro': 'Consulta Registro'
+        }[ev.tipo] || ev.tipo;
+        return `<li><strong>${tipoLabel}</strong> (${ev.data}): ${ev.descricao}</li>`;
+      }).join('');
+
+      document.getElementById('conteudo-resumo').innerHTML = `
+        <div class="resumo-item">
+          <span class="resumo-item-label">ID Investigação</span>
+          <span class="resumo-item-valor">${estadoApp.investigacaoId || 'N/A'}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Não Conformidade</span>
+          <span class="resumo-item-valor">${nc.id}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Lote</span>
+          <span class="resumo-item-valor">${nc.lote_afetado}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Equipamento</span>
+          <span class="resumo-item-valor">${nc.equipamento}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Metodologia</span>
+          <span class="resumo-item-valor">${metodologiaLabel}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Hipótese Inicial</span>
+          <span class="resumo-item-valor">${inv.causa_raiz_suspeita}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Evidências Coletadas</span>
+          <span class="resumo-item-valor"><ul>${htmlEvidencias}</ul></span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Causa Raiz Confirmada</span>
+          <span class="resumo-item-valor">Sim</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Narrativa Final</span>
+          <span class="resumo-item-valor">${inv.narrativa_final}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Data/Hora Conclusão</span>
+          <span class="resumo-item-valor">${new Date().toLocaleString('pt-BR')}</span>
+        </div>
+        <div class="resumo-item">
+          <span class="resumo-item-label">Analista</span>
+          <span class="resumo-item-valor">${estadoApp.usuarioLogado}</span>
+        </div>
+      `;
+    }
+
+    function novaInvestigacao() {
+      estadoApp.investigacao = {
+        nao_conformidade_id: null,
+        metodologia: '',
+        causa_raiz_suspeita: '',
+        evidencias: [],
+        causa_raiz_confirmada: '',
+        narrativa_final: ''
+      };
+      estadoApp.investigacaoConcluida = false;
+      estadoApp.investigacaoId = null;
+
+      document.getElementById('tela-conclusao').style.display = 'none';
+      document.getElementById('conteudo-principal').style.display = 'block';
+
+      document.getElementById('metodologia').value = '';
+      document.getElementById('hipotese-causa').value = '';
+      document.getElementById('causa-confirmada').value = '';
+      document.getElementById('narrativa-final').value = '';
+      document.getElementById('lista-evidencias').innerHTML = '';
+      document.getElementById('bloco-narrativa').style.display = 'none';
+
+      atualizarEstadoUI();
+    }
+
+    function voltarParaLista() {
+      window.location.href = '/apps/empresa-rivexx-componentes-ind-stria-d-4/nao-conformidades';
+    }
+
+    function mostrarMensagem(texto, tipo) {
+      const msg = document.getElementById('mensagem-app');
+      msg.textContent = texto;
+      msg.className = `mensagem visivel mensagem-${tipo}`;
+      setTimeout(() => {
+        msg.classList.remove('visivel');
+      }, 5000);
+    }
+
+    // Iniciar aplicação
+    document.addEventListener('DOMContentLoaded', iniciar);
+  </script>
+</body>
+</html>

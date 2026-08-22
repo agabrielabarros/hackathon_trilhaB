@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Não Conformidade</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+    }
+
+    body {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      flex: 1;
+      max-width: 100%;
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      border-radius: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .cabecalho {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .titulo {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--tinta);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .indicador-conexao {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 0;
+    }
+
+    .indicador-conexao.online {
+      color: var(--ok);
+    }
+
+    .indicador-conexao.offline {
+      color: var(--critico);
+      background-color: rgba(163, 33, 22, 0.1);
+    }
+
+    .status-sincronizacao {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--grafite);
+      padding: 4px 8px;
+      background-color: rgba(31, 78, 95, 0.1);
+      border-radius: 0;
+      height: 28px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--aco);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .formulario {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .grupo-campo {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .rotulo {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+    }
+
+    .campo-entrada, .campo-select, .campo-textarea {
+      font-size: 14px;
+      padding: 12px;
+      border: 1px solid var(--regua);
+      border-radius: 0;
+      background-color: var(--superficie);
+      color: var(--tinta);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 48px;
+    }
+
+    .campo-entrada:focus, .campo-select:focus, .campo-textarea:focus {
+      outline: 2px solid var(--aco);
+      outline-offset: -1px;
+    }
+
+    .campo-entrada:disabled, .campo-select:disabled {
+      background-color: #EFEFEF;
+      color: var(--grafite);
+      cursor: not-allowed;
+    }
+
+    .campo-entrada.invalido, .campo-select.invalido, .campo-textarea.invalido {
+      border-color: var(--critico);
+      background-color: rgba(163, 33, 22, 0.05);
+    }
+
+    .campo-textarea {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .campo-erro {
+      display: none;
+      font-size: 12px;
+      color: var(--critico);
+      margin-top: 2px;
+    }
+
+    .grupo-campo.com-erro .campo-erro {
+      display: block;
+    }
+
+    .contexto-automatico {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      background-color: #F5F6F3;
+      border: 1px solid var(--regua);
+      border-radius: 0;
+    }
+
+    .item-contexto {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .item-contexto .label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      font-weight: 600;
+    }
+
+    .item-contexto .valor {
+      font-size: 13px;
+      font-family: ui-monospace, monospace;
+      color: var(--tinta);
+    }
+
+    .botoes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 120px;
+      min-height: 48px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .btn-primario {
+      background-color: var(--aco);
+      color: #FFF;
+    }
+
+    .btn-primario:hover:not(:disabled) {
+      background-color: #16364d;
+    }
+
+    .btn-primario:active:not(:disabled) {
+      background-color: #0f2937;
+    }
+
+    .btn-primario:disabled {
+      background-color: #CCC;
+      cursor: not-allowed;
+    }
+
+    .btn-secundario {
+      background-color: #E8E9E6;
+      color: var(--tinta);
+      border: 1px solid var(--regua);
+    }
+
+    .btn-secundario:hover:not(:disabled) {
+      background-color: #DCDDD9;
+    }
+
+    .btn-secundario:disabled {
+      background-color: #F5F5F5;
+      color: var(--grafite);
+      cursor: not-allowed;
+    }
+
+    .mensagem {
+      padding: 12px;
+      border-radius: 0;
+      font-size: 13px;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .mensagem.sucesso {
+      display: block;
+      background-color: rgba(44, 110, 73, 0.1);
+      border: 1px solid var(--ok);
+      color: var(--ok);
+    }
+
+    .mensagem.erro {
+      display: block;
+      background-color: rgba(163, 33, 22, 0.1);
+      border: 1px solid var(--critico);
+      color: var(--critico);
+    }
+
+    .mensagem.info {
+      display: block;
+      background-color: rgba(31, 78, 95, 0.1);
+      border: 1px solid var(--aco);
+      color: var(--aco);
+    }
+
+    .mensagem.aviso {
+      display: block;
+      background-color: rgba(154, 84, 7, 0.1);
+      border: 1px solid var(--alerta);
+      color: var(--alerta);
+    }
+
+    .id-nao-conformidade {
+      font-family: ui-monospace, monospace;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .nota-estado-vazio {
+      padding: 24px 16px;
+      background-color: #F5F6F3;
+      border: 1px dashed var(--regua);
+      border-radius: 0;
+      text-align: center;
+      color: var(--grafite);
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .nota-estado-vazio.visivel {
+      display: block;
+    }
+
+    .contador-pendentes {
+      font-size: 11px;
+      font-family: ui-monospace, monospace;
+      color: var(--critico);
+      padding: 2px 4px;
+      background-color: rgba(163, 33, 22, 0.1);
+      border-radius: 0;
+    }
+
+    @media (max-width: 699px) {
+      .container {
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .contextuo-automatico {
+        grid-template-columns: 1fr;
+      }
+
+      .botoes {
+        flex-direction: column;
+      }
+
+      .btn {
+        min-width: auto;
+      }
+    }
+
+    .campo-scanning {
+      position: relative;
+    }
+
+    .btn-scanning {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--aco);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+
+    .btn-scanning:hover {
+      color: #16364d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="cabecalho">
+      <h1 class="titulo">Registro de Não Conformidade</h1>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <div id="indicadorConexao" class="indicador-conexao online">
+          <span>● Online</span>
+        </div>
+        <div id="statusSincronizacao" class="status-sincronizacao" style="display: none;">
+          <span class="spinner"></span>
+          <span>Sincronizando...</span>
+          <span id="contadorSincronizacao"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="mensagemSucesso" class="mensagem sucesso"></div>
+    <div id="mensagemErro" class="mensagem erro"></div>
+    <div id="mensagemInfo" class="mensagem info"></div>
+    <div id="mensagemAviso" class="mensagem aviso"></div>
+
+    <form id="formularioNC" class="formulario">
+      <!-- Contexto automático -->
+      <div class="contexto-automatico">
+        <div class="item-contexto">
+          <span class="label">Data</span>
+          <span id="dataAtual" class="valor">-</span>
+        </div>
+        <div class="item-contexto">
+          <span class="label">Hora</span>
+          <span id="horaAtual" class="valor">-</span>
+        </div>
+        <div class="item-contexto">
+          <span class="label">Operador</span>
+          <span id="operadorAtual" class="valor">-</span>
+        </div>
+        <div class="item-contexto">
+          <span class="label">Turno</span>
+          <span id="turnoAtual" class="valor">-</span>
+        </div>
+      </div>
+
+      <!-- Turno (seletor obrigatório) -->
+      <div class="grupo-campo">
+        <label class="rotulo" for="turnoCampo">Turno *</label>
+        <select id="turnoCampo" class="campo-select" required>
+          <option value="">Selecione o turno</option>
+          <option value="1">Turno 1 (06:00 - 14:00)</option>
+          <option value="2">Turno 2 (14:00 - 22:00)</option>
+          <option value="3">Turno 3 (22:00 - 06:00)</option>
+        </select>
+        <div class="campo-erro">Turno é obrigatório</div>
+      </div>
+
+      <!-- Equipamento -->
+      <div class="grupo-campo">
+        <label class="rotulo" for="equipamentoCampo">Equipamento *</label>
+        <select id="equipamentoCampo" class="campo-select" required>
+          <option value="">Selecione o equipamento</option>
+        </select>
+        <div class="campo-erro">Equipamento é obrigatório</div>
+      </div>
+
+      <!-- Lote -->
+      <div class="grupo-campo">
+        <label class="rotulo" for="loteCampo">Lote Afetado *</label>
+        <div class="campo-scanning" style="position: relative;">
+          <input id="loteCampo" type="text" class="campo-entrada" placeholder="Digite ou escaneie o lote" required>
+          <button type="button" id="btnScanning" class="btn-scanning" title="Escanear código">📱</button>
+        </div>
+        <div class="campo-erro">Lote é obrigatório</div>
+      </div>
+
+      <!-- Matéria-prima -->
+      <div class="grupo-campo">
+        <label class="rotulo" for="materiaPrimaCampo">Matéria-Prima *</label>
+        <select id="materiaPrimaCampo" class="campo-select" required>
+          <option value="">Selecione a matéria-prima</option>
+        </select>
+        <div class="campo-erro">Matéria-prima é obrigatória</div>
+      </div>
+
+      <!-- Descrição do Defeito -->
+      <div class="grupo-campo">
+        <label class="rotulo" for="descricaoCampo">Descrição do Defeito *</label>
+        <textarea id="descricaoCampo" class="campo-textarea" placeholder="Descreva o defeito detectado com detalhes" required></textarea>
+        <div class="campo-erro">Descrição do defeito é obrigatória</div>
+      </div>
+
+      <!-- Botões -->
+      <div class="botoes">
+        <button type="submit" id="btnRegistrar" class="btn btn-primario">Registrar Não Conformidade</button>
+        <button type="button" id="btnSincronizar" class="btn btn-secundario" disabled title="Sincronizar registros pendentes">Sincronizar Agora</button>
+        <button type="reset" class="btn btn-secundario">Limpar</button>
+      </div>
+    </form>
+
+    <div id="notaEstadoVazio" class="nota-estado-vazio">
+      <strong>Nenhum registro ainda.</strong><br>
+      Preencha o formulário acima para registrar a primeira não conformidade. Todos os campos marcados com * são obrigatórios.
+    </div>
+  </div>
+
+  <script>
+    // ========== CONFIGURAÇÃO ==========
+    const API_BASE = '/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records';
+    const DB_NAME = 'NaoConformidadeDB';
+    const DB_VERSION = 1;
+    const STORE_PENDENTES = 'registros_pendentes';
+    const STORE_CACHE = 'cache_dropdowns';
+    const HEALTH_CHECK_INTERVAL = 10000; // 10s
+    let db = null;
+    let isOnline = navigator.onLine;
+    let syncInProgress = false;
+
+    // ========== INICIALIZAÇÃO DO INDEXEDDB ==========
+    async function initIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains(STORE_PENDENTES)) {
+            database.createObjectStore(STORE_PENDENTES, { keyPath: 'id', autoIncrement: true });
+          }
+          if (!database.objectStoreNames.contains(STORE_CACHE)) {
+            database.createObjectStore(STORE_CACHE, { keyPath: 'tipo' });
+          }
+        };
+        req.onsuccess = () => {
+          db = req.result;
+          resolve();
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    // ========== SALVAMENTO NO INDEXEDDB ==========
+    async function salvarRegistroPendente(dados) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PENDENTES], 'readwrite');
+        const store = tx.objectStore(STORE_PENDENTES);
+        const registro = {
+          tipo: 'nao_conformidades',
+          dados: dados,
+          status: 'pendente',
+          tentativas: 0,
+          dataCriacao: new Date().toISOString()
+        };
+        const req = store.add(registro);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function obterRegistrosPendentes() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PENDENTES], 'readonly');
+        const store = tx.objectStore(STORE_PENDENTES);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result.filter(r => r.status === 'pendente'));
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function atualizarRegistroPendente(id, status) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PENDENTES], 'readwrite');
+        const store = tx.objectStore(STORE_PENDENTES);
+        const req = store.get(id);
+        req.onsuccess = () => {
+          const registro = req.result;
+          if (registro) {
+            registro.status = status;
+            const updateReq = store.put(registro);
+            updateReq.onsuccess = () => resolve();
+            updateReq.onerror = () => reject(updateReq.error);
+          } else {
+            resolve();
+          }
+        };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function deletarRegistroPendente(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_PENDENTES], 'readwrite');
+        const store = tx.objectStore(STORE_PENDENTES);
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function salvarCacheDropdowns(tipo, dados) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_CACHE], 'readwrite');
+        const store = tx.objectStore(STORE_CACHE);
+        const req = store.put({ tipo: tipo, dados: dados, dataCriacao: new Date().toISOString() });
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function obterCacheDropdowns(tipo) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_CACHE], 'readonly');
+        const store = tx.objectStore(STORE_CACHE);
+        const req = store.get(tipo);
+        req.onsuccess = () => resolve(req.result ? req.result.dados : null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    // ========== CONECTIVIDADE ==========
+    function atualizarIndicadorConexao() {
+      const indicador = document.getElementById('indicadorConexao');
+      if (isOnline) {
+        indicador.className = 'indicador-conexao online';
+        indicador.innerHTML = '<span>● Online</span>';
+      } else {
+        indicador.className = 'indicador-conexao offline';
+        indicador.innerHTML = '<span>● Offline</span>';
+      }
+    }
+
+    window.addEventListener('online', async () => {
+      isOnline = true;
+      atualizarIndicadorConexao();
+      limparMensagens();
+      exibirMensagem('Conexão restaurada. Sincronizando registros pendentes...', 'info');
+      await sincronizarRegistrosPendentes();
+    });
+
+    window.addEventListener('offline', () => {
+      isOnline = false;
+      atualizarIndicadorConexao();
+      limparMensagens();
+      exibirMensagem('Modo offline ativado. Registros serão sincronizados ao restaurar conexão.', 'aviso');
+    });
+
+    function healthCheck() {
+      fetch(API_BASE, { method: 'HEAD', cache: 'no-cache' })
+        .then(() => {
+          if (!isOnline) {
+            isOnline = true;
+            atualizarIndicadorConexao();
+            limparMensagens();
+            exibirMensagem('Conexão restaurada.', 'info');
+            sincronizarRegistrosPendentes();
+          }
+        })
+        .catch(() => {
+          if (isOnline) {
+            isOnline = false;
+            atualizarIndicadorConexao();
+          }
+        });
+    }
+
+    setInterval(healthCheck, HEALTH_CHECK_INTERVAL);
+
+    // ========== CONTEXTO AUTOMÁTICO ==========
+    function atualizarContextoAutomatico() {
+      const agora = new Date();
+      const data = agora.toLocaleDateString('pt-BR');
+      const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const operador = obterOperadorLogado();
+      const turno = obterTurnoAtual();
+
+      document.getElementById('dataAtual').textContent = data;
+      document.getElementById('horaAtual').textContent = hora;
+      document.getElementById('operadorAtual').textContent = operador;
+      document.getElementById('turnoAtual').textContent = `Turno ${turno}`;
+    }
+
+    function obterOperadorLogado() {
+      // Simulação: em produção, vem do session/auth
+      return localStorage.getItem('operador') || 'OP-' + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    }
+
+    function obterTurnoAtual() {
+      const agora = new Date();
+      const horas = agora.getHours();
+      if (horas >= 6 && horas < 14) return '1';
+      if (horas >= 14 && horas < 22) return '2';
+      return '3';
+    }
+
+    // ========== CARREGAMENTO DE DROPDOWNS ==========
+    async function carregarEquipamentos() {
+      try {
+        const cache = await obterCacheDropdowns('equipamentos');
+        if (cache) {
+          preencherSelect('equipamentoCampo', cache);
+          return;
+        }
+
+        const resp = await fetch(API_BASE + '?tipo=equipamentos');
+        if (!resp.ok) throw new Error('Falha ao carregar equipamentos');
+        const { registros } = await resp.json();
+        const equipamentos = registros.map(r => r.dados.nome).filter(Boolean);
+
+        if (equipamentos.length > 0) {
+          await salvarCacheDropdowns('equipamentos', equipamentos);
+          preencherSelect('equipamentoCampo', equipamentos);
+        } else {
+          preencherSelect('equipamentoCampo', ['Prensa 1', 'Prensa 2', 'Torno 1', 'Fresa 1', 'Montadora 1']);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar equipamentos:', err);
+        preencherSelect('equipamentoCampo', ['Prensa 1', 'Prensa 2', 'Torno 1', 'Fresa 1', 'Montadora 1']);
+      }
+    }
+
+    async function carregarMateriaisPrimas() {
+      try {
+        const cache = await obterCacheDropdowns('materias_primas');
+        if (cache) {
+          preencherSelect('materiaPrimaCampo', cache);
+          return;
+        }
+
+        const resp = await fetch(API_BASE + '?tipo=materias_primas');
+        if (!resp.ok) throw new Error('Falha ao carregar matérias-primas');
+        const { registros } = await resp.json();
+        const materiais = registros.map(r => r.dados.nome).filter(Boolean);
+
+        if (materiais.length > 0) {
+          await salvarCacheDropdowns('materias_primas', materiais);
+          preencherSelect('materiaPrimaCampo', materiais);
+        } else {
+          preencherSelect('materiaPrimaCampo', ['Aço Inox AISI 304', 'Alumínio 6061', 'Latão CW614N', 'Cobre Puro', 'Plástico ABS']);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar matérias-primas:', err);
+        preencherSelect('materiaPrimaCampo', ['Aço Inox AISI 304', 'Alumínio 6061', 'Latão CW614N', 'Cobre Puro', 'Plástico ABS']);
+      }
+    }
+
+    function preencherSelect(selectId, opcoes) {
+      const select = document.getElementById(selectId);
+      const opcaoSelecionada = select.value;
+      select.innerHTML = '<option value="">Selecione uma opção</option>';
+      opcoes.forEach(opcao => {
+        const option = document.createElement('option');
+        option.value = opcao;
+        option.textContent = opcao;
+        select.appendChild(option);
+      });
+      select.value = opcaoSelecionada;
+    }
+
+    // ========== VALIDAÇÃO ==========
+    function validarFormulario() {
+      const campos = [
+        'turnoCampo',
+        'equipamentoCampo',
+        'loteCampo',
+        'materiaPrimaCampo',
+        'descricaoCampo'
+      ];
+
+      let valido = true;
+      campos.forEach(campoId => {
+        const campo = document.getElementById(campoId);
+        const grupo = campo.closest('.grupo-campo');
+        if (!campo.value.trim()) {
+          campo.classList.add('invalido');
+          grupo.classList.add('com-erro');
+          valido = false;
+        } else {
+          campo.classList.remove('invalido');
+          grupo.classList.remove('com-erro');
+        }
+      });
+
+      return valido;
+    }
+
+    // ========== SINCRONIZAÇÃO ==========
+    async function sincronizarRegistrosPendentes() {
+      if (syncInProgress || !isOnline) return;
+      syncInProgress = true;
+
+      const statusEl = document.getElementById('statusSincronizacao');
+      const contadorEl = document.getElementById('contadorSincronizacao');
+      statusEl.style.display = 'flex';
+
+      try {
+        const pendentes = await obterRegistrosPendentes();
+        if (pendentes.length === 0) {
+          statusEl.style.display = 'none';
+          syncInProgress = false;
+          return;
+        }
+
+        let sincronizados = 0;
+        for (const registro of pendentes) {
+          try {
+            const resp = await fetch(API_BASE, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                tipo: registro.tipo,
+                dados: registro.dados
+              })
+            });
+
+            if (resp.ok) {
+              await deletarRegistroPendente(registro.id);
+              sincronizados++;
+              contadorEl.textContent = `${sincronizados}/${pendentes.length}`;
+            } else {
+              registro.tentativas = (registro.tentativas || 0) + 1;
+              if (registro.tentativas >= 3) {
+                await atualizarRegistroPendente(registro.id, 'erro');
+              }
+            }
+          } catch (err) {
+            console.error('Erro ao sincronizar registro:', err);
+          }
+        }
+
+        statusEl.style.display = 'none';
+        if (sincronizados > 0) {
+          limparMensagens();
+          exibirMensagem(`${sincronizados} registro(s) sincronizado(s) com sucesso.`, 'sucesso');
+        }
+
+        atualizarBotaoSincronizar();
+      } catch (err) {
+        console.error('Erro na sincronização:', err);
+        statusEl.style.display = 'none';
+        limparMensagens();
+        exibirMensagem('Erro ao sincronizar. Tente novamente.', 'erro');
+      } finally {
+        syncInProgress = false;
+      }
+    }
+
+    async function atualizarBotaoSincronizar() {
+      const btn = document.getElementById('btnSincronizar');
+      const pendentes = await obterRegistrosPendentes();
+      btn.disabled = isOnline || pendentes.length === 0;
+      if (pendentes.length > 0) {
+        btn.textContent = `Sincronizar Agora (${pendentes.length})`;
+      } else {
+        btn.textContent = 'Sincronizar Agora';
+      }
+    }
+
+    // ========== MENSAGENS ==========
+    function exibirMensagem(texto, tipo = 'info') {
+      const elementoId = `mensagem${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+      const elemento = document.getElementById(elementoId);
+      if (elemento) {
+        elemento.textContent = texto;
+        elemento.style.display = 'block';
+      }
+    }
+
+    function limparMensagens() {
+      ['sucesso', 'erro', 'info', 'aviso'].forEach(tipo => {
+        const el = document.getElementById(`mensagem${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+        if (el) el.style.display = 'none';
+      });
+    }
+
+    // ========== FORMULÁRIO SUBMIT ==========
+    const formularioNC = document.getElementById('formularioNC');
+    formularioNC.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      limparMensagens();
+
+      if (!validarFormulario()) {
+        exibirMensagem('Preencha todos os campos obrigatórios.', 'erro');
+        return;
+      }
+
+      const agora = new Date();
+      const dados = {
+        data_registro: agora.toISOString().split('T')[0],
+        hora_registro: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        turno: document.getElementById('turnoCampo').value,
+        operador: obterOperadorLogado(),
+        equipamento: document.getElementById('equipamentoCampo').value,
+        lote_afetado: document.getElementById('loteCampo').value,
+        materia_prima: document.getElementById('materiaPrimaCampo').value,
+        descricao_defeito: document.getElementById('descricaoCampo').value,
+        origem_deteccao: 'Chão de Fábrica',
+        data_criacao: agora.toISOString(),
+        responsavel: obterOperadorLogado(),
+        status: 'aberto'
+      };
+
+      if (isOnline) {
+        try {
+          const resp = await fetch(API_BASE, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tipo: 'nao_conformidades',
+              dados: dados
+            })
+          });
+
+          if (!resp.ok) {
+            const erro = await resp.text();
+            throw new Error(erro || 'Falha na requisição');
+          }
+
+          const resultado = await resp.json();
+          const id = resultado.id || 'SEM-ID';
+
+          limparMensagens();
+          exibirMensagem(`Não conformidade registrada com sucesso! ID: <span class="id-nao-conformidade">${id}</span>`, 'sucesso');
+          formularioNC.reset();
+          validarFormulario();
+        } catch (err) {
+          console.error('Erro ao registrar:', err);
+          limparMensagens();
+          exibirMensagem(`Erro ao registrar: ${err.message}. Salvando localmente para sincronização posterior.`, 'erro');
+          await salvarRegistroPendente(dados);
+          exibirMensagem('Registrado localmente. Será sincronizado automaticamente quando a conexão for restaurada.', 'info');
+          formularioNC.reset();
+          validarFormulario();
+          atualizarBotaoSincronizar();
+        }
+      } else {
+        try {
+          await salvarRegistroPendente(dados);
+          limparMensagens();
+          exibirMensagem('Registrado localmente. Será sincronizado automaticamente ao restaurar conexão.', 'aviso');
+          formularioNC.reset();
+          validarFormulario();
+          atualizarBotaoSincronizar();
+        } catch (err) {
+          console.error('Erro ao salvar localmente:', err);
+          limparMensagens();
+          exibirMensagem('Erro ao salvar registro local.', 'erro');
+        }
+      }
+    });
+
+    // ========== BOTÃO SINCRONIZAR AGORA ==========
+    document.getElementById('btnSincronizar').addEventListener('click', async () => {
+      limparMensagens();
+      await sincronizarRegistrosPendentes();
+    });
+
+    // ========== SCANNING (simulação) ==========
+    document.getElementById('btnScanning').addEventListener('click', (e) => {
+      e.preventDefault();
+      const loteInput = document.getElementById('loteCampo');
+      const codigoSimulado = 'LOTE-' + Date.now().toString().slice(-6);
+      loteInput.value = codigoSimulado;
+      loteInput.focus();
+    });
+
+    // ========== INICIALIZAÇÃO ==========
+    async function inicializar() {
+      try {
+        await initIndexedDB();
+        atualizarContextoAutomatico();
+        await carregarEquipamentos();
+        await carregarMateriaisPrimas();
+        atualizarIndicadorConexao();
+        await atualizarBotaoSincronizar();
+
+        // Atualizar contexto a cada minuto
+        setInterval(atualizarContextoAutomatico, 60000);
+      } catch (err) {
+        console.error('Erro na inicialização:', err);
+        exibirMensagem('Erro ao inicializar a aplicação. Recarregue a página.', 'erro');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', inicializar);
+  </script>
+</body>
+</html>

@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lançamento de Turno</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+      padding: 1rem;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      font-size: 0.9rem;
+      color: var(--grafite);
+    }
+
+    .form-container {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--regua);
+      padding-bottom: 0.5rem;
+    }
+
+    .field-group {
+      margin-bottom: 1.2rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 0.5rem;
+    }
+
+    .required::after {
+      content: " *";
+      color: var(--critico);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 1rem;
+      border: 1px solid var(--regua);
+      background-color: white;
+      color: var(--tinta);
+      min-height: 48px;
+      border-radius: 0;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--aco);
+      background-color: var(--aco-claro);
+    }
+
+    input[type="text"]:disabled,
+    input[type="number"]:disabled,
+    input[type="date"]:disabled,
+    select:disabled,
+    textarea:disabled {
+      background-color: #F0F0F0;
+      color: var(--grafite);
+      cursor: not-allowed;
+    }
+
+    .linha-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .linha-button {
+      padding: 0.75rem;
+      font-family: ui-monospace, monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid var(--regua);
+      background-color: white;
+      color: var(--tinta);
+      cursor: pointer;
+      min-height: 48px;
+      transition: all 0.2s ease;
+    }
+
+    .linha-button:hover {
+      border-color: var(--aco);
+      background-color: var(--aco-claro);
+    }
+
+    .linha-button.selected {
+      border-color: var(--aco);
+      background-color: var(--aco);
+      color: white;
+    }
+
+    .linha-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--grafite);
+      margin-top: 0.25rem;
+    }
+
+    .field-error {
+      font-size: 0.8rem;
+      color: var(--critico);
+      margin-top: 0.25rem;
+    }
+
+    .conditional-field {
+      display: none;
+    }
+
+    .conditional-field.visible {
+      display: block;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    button[type="submit"],
+    button[type="reset"] {
+      flex: 1;
+      padding: 0.75rem;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: none;
+      min-height: 48px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button[type="submit"] {
+      background-color: var(--ok);
+      color: white;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      opacity: 0.9;
+    }
+
+    button[type="submit"]:disabled {
+      background-color: var(--regua);
+      color: var(--grafite);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    button[type="reset"] {
+      background-color: var(--aco-claro);
+      color: var(--aco);
+      border: 1px solid var(--aco);
+    }
+
+    button[type="reset"]:hover:not(:disabled) {
+      background-color: var(--aco);
+      color: white;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 1rem;
+      left: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .toast {
+      background-color: var(--superficie);
+      border-left: 4px solid var(--ok);
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      animation: slideIn 0.3s ease;
+      font-size: 0.9rem;
+    }
+
+    .toast.info {
+      border-left-color: var(--aco);
+    }
+
+    .toast.error {
+      border-left-color: var(--critico);
+    }
+
+    .toast.success {
+      border-left-color: var(--ok);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+    }
+
+    .empty-state h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+      color: var(--grafite);
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0.75rem;
+      }
+
+      .form-container {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.25rem;
+      }
+
+      .button-group {
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="header">
+      <h1>Lançamento de Turno</h1>
+      <p>Registre os dados da sua linha ao fim do turno</p>
+    </div>
+
+    <form id="turnoForm" class="form-container">
+      <!-- SEÇÃO 1: IDENTIFICAÇÃO -->
+      <div class="form-section">
+        <div class="section-title">Identificação</div>
+
+        <div class="field-group">
+          <label for="linhaField" class="required">Linha de Extrusão</label>
+          <div class="linha-selector" id="linhaSelector">
+            <button type="button" class="linha-button" data-linha="1">Linha 1</button>
+            <button type="button" class="linha-button" data-linha="2">Linha 2</button>
+            <button type="button" class="linha-button" data-linha="3">Linha 3</button>
+            <button type="button" class="linha-button" data-linha="4">Linha 4</button>
+            <button type="button" class="linha-button" data-linha="5">Linha 5</button>
+          </div>
+          <input type="hidden" id="linhaField" name="linha" value="">
+          <div class="field-error" id="linhaError"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="turnoField" class="required">Turno</label>
+          <select id="turnoField" name="turno" required>
+            <option value="">Selecione um turno</option>
+            <option value="1">Turno 1 (06h - 14h)</option>
+            <option value="2">Turno 2 (14h - 22h)</option>
+          </select>
+          <div class="field-error" id="turnoError"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="dataField" class="required">Data</label>
+          <input type="date" id="dataField" name="data" required readonly>
+          <div class="field-hint">Data de hoje (pré-preenchida)</div>
+        </div>
+
+        <div class="field-group">
+          <label for="responsavelField" class="required">Responsável</label>
+          <input type="text" id="responsavelField" name="responsavel" readonly>
+          <div class="field-hint">Usuário logado (leitura apenas)</div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO 2: PRODUÇÃO E CONSUMO -->
+      <div class="form-section">
+        <div class="section-title">Produção e Consumo</div>
+
+        <div class="field-group">
+          <label for="resinaBrutoField" class="required">Resina Consumida (kg)</label>
+          <input type="number" id="resinaBrutoField" name="resina_consumida" min="0" step="0.1" required>
+          <div class="field-hint">Peso total de resina utilizada</div>
+          <div class="field-error" id="resinaBrutoError"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="tuboBomField" class="required">Tubo Bom (kg)</label>
+          <input type="number" id="tuboBomField" name="tubo_bom" min="0" step="0.1" required>
+          <div class="field-hint">Peso do tubo produzido conforme especificação</div>
+          <div class="field-error" id="tuboBomError"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="precoResinField" class="required">Preço da Resina (R$/kg)</label>
+          <input type="number" id="precoResinField" name="preco_resina" min="0" step="0.1" required>
+          <div class="field-hint">Valor unitário da resina neste turno</div>
+          <div class="field-error" id="precoResinError"></div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO 3: REFUGO E PERDA -->
+      <div class="form-section">
+        <div class="section-title">Refugo e Perda</div>
+
+        <div class="field-group">
+          <label for="refugoPartidaField" class="required">Refugo de Partida (kg)</label>
+          <input type="number" id="refugoPartidaField" name="refugo_partida" min="0" step="0.1" required>
+          <div class="field-hint">Material perdido no início da produção</div>
+          <div class="field-error" id="refugoPartidaError"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="purgaTrocaField" class="required">Purga de Troca (kg)</label>
+          <input type="number" id="purgaTrocaField" name="purga_troca" min="0" step="0.1" required>
+          <div class="field-hint">Material purgado durante troca de cor ou especificação</div>
+          <div class="field-error" id="purgaTrocaError"></div>
+        </div>
+
+        <div class="field-group">
+          <label for="sobraCauteField" class="required">Sobra de Corte (kg)</label>
+          <input type="number" id="sobraCauteField" name="sobra_corte" min="0" step="0.1" required>
+          <div class="field-hint">Resíduo de corte e ajuste de comprimento</div>
+          <div class="field-error" id="sobraCauteError"></div>
+        </div>
+      </div>
+
+      <!-- SEÇÃO 4: PARADAS -->
+      <div class="form-section">
+        <div class="field-group">
+          <label for="horasParadasField" class="required">Horas Paradas</label>
+          <input type="number" id="horasParadasField" name="horas_paradas" min="0" step="0.1" required>
+          <div class="field-hint">Tempo total de parada durante o turno</div>
+          <div class="field-error" id="horasParadasError"></div>
+        </div>
+
+        <div class="field-group conditional-field" id="motivoParadaGroup">
+          <label for="motivoParadaField" class="required">Motivo da Parada</label>
+          <textarea id="motivoParadaField" name="motivo_parada" placeholder="Descreva as razões das paradas"></textarea>
+          <div class="field-hint">Obrigatório quando há horas paradas</div>
+          <div class="field-error" id="motivoParadaError"></div>
+        </div>
+      </div>
+
+      <!-- BOTÕES -->
+      <div class="button-group">
+        <button type="reset">Limpar</button>
+        <button type="submit" id="submitBtn" disabled>Enviar Lançamento</button>
+      </div>
+    </form>
+
+    <div id="toastContainer" class="toast-container"></div>
+  </main>
+
+  <script>
+    // ============================================================================
+    // CONSTANTS & CONFIG
+    // ============================================================================
+    const API_BASE = '/api/apps/empresa-tubos-meridiano-extrus-o-de-tu-2';
+    const COLLECTION_NAME = 'registros_turno';
+    const SYNC_INTERVAL = 10000; // 10 segundos
+    let syncRetryInterval = null;
+    let pendingRecords = [];
+
+    // ============================================================================
+    // UTILITY FUNCTIONS
+    // ============================================================================
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function getTodayDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getResponsavel() {
+      // Lê do localStorage ou usa padrão
+      return localStorage.getItem('usuario_logado') || 'Supervisor';
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
+    }
+
+    function validateNumberField(value, fieldName) {
+      const num = parseFloat(value);
+      if (isNaN(num) || num < 0) {
+        return `${fieldName} deve ser um número positivo`;
+      }
+      // Verificar máximo 1 casa decimal
+      if (!/^\d+(\.\d{1})?$/.test(value.trim()) && value.trim() !== '') {
+        return `${fieldName} deve ter no máximo 1 casa decimal`;
+      }
+      return '';
+    }
+
+    function validateForm() {
+      const form = document.getElementById('turnoForm');
+      const formData = new FormData(form);
+
+      let isValid = true;
+      const errors = {};
+
+      // Validar linha
+      const linha = formData.get('linha').trim();
+      if (!linha) {
+        errors.linha = 'Selecione uma linha';
+        isValid = false;
+      }
+
+      // Validar turno
+      const turno = formData.get('turno').trim();
+      if (!turno) {
+        errors.turno = 'Selecione um turno';
+        isValid = false;
+      }
+
+      // Validar campos numéricos
+      const numericFields = [
+        { name: 'resina_consumida', label: 'Resina Consumida' },
+        { name: 'tubo_bom', label: 'Tubo Bom' },
+        { name: 'preco_resina', label: 'Preço da Resina' },
+        { name: 'refugo_partida', label: 'Refugo de Partida' },
+        { name: 'purga_troca', label: 'Purga de Troca' },
+        { name: 'sobra_corte', label: 'Sobra de Corte' },
+        { name: 'horas_paradas', label: 'Horas Paradas' }
+      ];
+
+      numericFields.forEach(field => {
+        const value = formData.get(field.name).trim();
+        if (!value) {
+          errors[field.name] = `${field.label} é obrigatório`;
+          isValid = false;
+        } else {
+          const error = validateNumberField(value, field.label);
+          if (error) {
+            errors[field.name] = error;
+            isValid = false;
+          }
+        }
+      });
+
+      // Validar motivo da parada se horas_paradas > 0
+      const horasParadas = parseFloat(formData.get('horas_paradas') || 0);
+      if (horasParadas > 0) {
+        const motivo = formData.get('motivo_parada').trim();
+        if (!motivo) {
+          errors.motivo_parada = 'Motivo da parada é obrigatório quando há paradas';
+          isValid = false;
+        }
+      }
+
+      // Limpar erros anteriores
+      document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+
+      // Exibir novos erros
+      Object.entries(errors).forEach(([field, message]) => {
+        const errorEl = document.getElementById(`${field}Error`);
+        if (errorEl) {
+          errorEl.textContent = message;
+        }
+      });
+
+      return isValid;
+    }
+
+    function updateSubmitButtonState() {
+      const form = document.getElementById('turnoForm');
+      const formData = new FormData(form);
+
+      const hasLinha = formData.get('linha').trim() !== '';
+      const hasTurno = formData.get('turno').trim() !== '';
+      const hasResinaBruto = formData.get('resina_consumida').trim() !== '';
+      const hasTuboBom = formData.get('tubo_bom').trim() !== '';
+      const hasPrecoResina = formData.get('preco_resina').trim() !== '';
+      const hasRefugoPartida = formData.get('refugo_partida').trim() !== '';
+      const hasPurgaTroca = formData.get('purga_troca').trim() !== '';
+      const hasSobraCorte = formData.get('sobra_corte').trim() !== '';
+      const hasHorasParadas = formData.get('horas_paradas').trim() !== '';
+
+      const horasParadas = parseFloat(formData.get('horas_paradas') || 0);
+      const hasMotivo = horasParadas > 0 ? formData.get('motivo_parada').trim() !== '' : true;
+
+      const allFilled = hasLinha && hasTurno && hasResinaBruto && hasTuboBom &&
+        hasPrecoResina && hasRefugoPartida && hasPurgaTroca && hasSobraCorte &&
+        hasHorasParadas && hasMotivo;
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = !allFilled;
+    }
+
+    function handleLinhaSelect(linhaValue) {
+      document.querySelectorAll('.linha-button').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      if (linhaValue) {
+        document.querySelector(`[data-linha="${linhaValue}"]`).classList.add('selected');
+      }
+      document.getElementById('linhaField').value = linhaValue;
+      updateSubmitButtonState();
+    }
+
+    function toggleMotivoParagdaField() {
+      const horasParadas = parseFloat(document.getElementById('horasParadasField').value || 0);
+      const motivoGroup = document.getElementById('motivoParadaGroup');
+
+      if (horasParadas > 0) {
+        motivoGroup.classList.add('visible');
+      } else {
+        motivoGroup.classList.remove('visible');
+        document.getElementById('motivoParadaField').value = '';
+      }
+      updateSubmitButtonState();
+    }
+
+    function saveDraftToLocalStorage(data) {
+      const id = data.id;
+      const draft = {
+        id,
+        ...data,
+        timestamp_criacao: new Date().toISOString(),
+        timestamp_tentativa_sync: null,
+        status: 'draft'
+      };
+      const drafts = JSON.parse(localStorage.getItem('turno_drafts') || '[]');
+      const existingIndex = drafts.findIndex(d => d.id === id);
+      if (existingIndex >= 0) {
+        drafts[existingIndex] = draft;
+      } else {
+        drafts.push(draft);
+      }
+      localStorage.setItem('turno_drafts', JSON.stringify(drafts));
+    }
+
+    function addPendingRecord(data) {
+      const id = data.id;
+      const pending = {
+        ...data,
+        status: 'pending'
+      };
+      const existingIndex = pendingRecords.findIndex(r => r.id === id);
+      if (existingIndex >= 0) {
+        pendingRecords[existingIndex] = pending;
+      } else {
+        pendingRecords.push(pending);
+      }
+    }
+
+    async function syncPendingRecords() {
+      if (pendingRecords.length === 0) {
+        return;
+      }
+
+      const recordsToSync = [...pendingRecords];
+
+      for (const record of recordsToSync) {
+        try {
+          const response = await fetch(`${API_BASE}/records`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Idempotency-Key': record.id
+            },
+            body: JSON.stringify({
+              tipo: COLLECTION_NAME,
+              dados: {
+                linha: record.linha,
+                turno: record.turno,
+                data: record.data,
+                responsavel: record.responsavel,
+                resina_consumida_kg: parseFloat(record.resina_consumida),
+                tubo_bom_kg: parseFloat(record.tubo_bom),
+                refugo_partida_kg: parseFloat(record.refugo_partida),
+                purga_troca_kg: parseFloat(record.purga_troca),
+                sobra_corte_kg: parseFloat(record.sobra_corte),
+                preco_resina_reais_kg: parseFloat(record.preco_resina),
+                horas_paradas: parseFloat(record.horas_paradas),
+                motivo_parada: record.motivo_parada,
+                timestamp_criacao: record.timestamp_criacao
+              }
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          // Remover do array de pendentes
+          pendingRecords = pendingRecords.filter(r => r.id !== record.id);
+
+          // Remover do localStorage
+          const drafts = JSON.parse(localStorage.getItem('turno_drafts') || '[]');
+          const updatedDrafts = drafts.filter(d => d.id !== record.id);
+          localStorage.setItem('turno_drafts', JSON.stringify(updatedDrafts));
+
+          showToast(`Registro ${record.linha}/${record.turno} sincronizado com sucesso`, 'success');
+        } catch (error) {
+          console.error('Sync error:', error);
+          // Manter no array para próxima tentativa
+        }
+      }
+    }
+
+    function setupSyncRetry() {
+      if (syncRetryInterval) {
+        clearInterval(syncRetryInterval);
+      }
+
+      syncRetryInterval = setInterval(() => {
+        if (navigator.onLine && pendingRecords.length > 0) {
+          syncPendingRecords();
+        }
+      }, SYNC_INTERVAL);
+    }
+
+    function loadPendingRecordsFromStorage() {
+      const drafts = JSON.parse(localStorage.getItem('turno_drafts') || '[]');
+      pendingRecords = drafts.filter(d => d.status === 'pending' || d.status === 'draft');
+    }
+
+    // ============================================================================
+    // FORM INITIALIZATION
+    // ============================================================================
+
+    function initForm() {
+      // Pré-preencher data
+      document.getElementById('dataField').value = getTodayDate();
+
+      // Pré-preencher responsável
+      document.getElementById('responsavelField').value = getResponsavel();
+
+      // Carregar registros pendentes do storage
+      loadPendingRecordsFromStorage();
+
+      // Setup retry automático
+      setupSyncRetry();
+
+      // Event listeners para linha
+      document.querySelectorAll('.linha-button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const linhaValue = btn.getAttribute('data-linha');
+          handleLinhaSelect(linhaValue);
+        });
+      });
+
+      // Event listeners para campos
+      document.getElementById('turnoField').addEventListener('change', updateSubmitButtonState);
+      document.getElementById('resinaBrutoField').addEventListener('input', updateSubmitButtonState);
+      document.getElementById('tuboBomField').addEventListener('input', updateSubmitButtonState);
+      document.getElementById('precoResinField').addEventListener('input', updateSubmitButtonState);
+      document.getElementById('refugoPartidaField').addEventListener('input', updateSubmitButtonState);
+      document.getElementById('purgaTrocaField').addEventListener('input', updateSubmitButtonState);
+      document.getElementById('sobraCauteField').addEventListener('input', updateSubmitButtonState);
+      document.getElementById('horasParadasField').addEventListener('input', () => {
+        toggleMotivoParagdaField();
+      });
+      document.getElementById('motivoParadaField').addEventListener('input', updateSubmitButtonState);
+
+      // Form submit
+      document.getElementById('turnoForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Validar
+        if (!validateForm()) {
+          showToast('Verifique os campos destacados', 'error');
+          return;
+        }
+
+        // Construir dados
+        const form = document.getElementById('turnoForm');
+        const formData = new FormData(form);
+
+        const recordId = generateUUID();
+        const recordData = {
+          id: recordId,
+          linha: formData.get('linha'),
+          turno: formData.get('turno'),
+          data: formData.get('data'),
+          responsavel: formData.get('responsavel'),
+          resina_consumida: formData.get('resina_consumida'),
+          tubo_bom: formData.get('tubo_bom'),
+          refugo_partida: formData.get('refugo_partida'),
+          purga_troca: formData.get('purga_troca'),
+          sobra_corte: formData.get('sobra_corte'),
+          preco_resina: formData.get('preco_resina'),
+          horas_paradas: formData.get('horas_paradas'),
+          motivo_parada: formData.get('motivo_parada'),
+          timestamp_criacao: new Date().toISOString()
+        };
+
+        // Salvar draft no localStorage
+        saveDraftToLocalStorage(recordData);
+
+        // Tentar enviar
+        try {
+          const response = await fetch(`${API_BASE}/records`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Idempotency-Key': recordId
+            },
+            body: JSON.stringify({
+              tipo: COLLECTION_NAME,
+              dados: {
+                linha: recordData.linha,
+                turno: recordData.turno,
+                data: recordData.data,
+                responsavel: recordData.responsavel,
+                resina_consumida_kg: parseFloat(recordData.resina_consumida),
+                tubo_bom_kg: parseFloat(recordData.tubo_bom),
+                refugo_partida_kg: parseFloat(recordData.refugo_partida),
+                purga_troca_kg: parseFloat(recordData.purga_troca),
+                sobra_corte_kg: parseFloat(recordData.sobra_corte),
+                preco_resina_reais_kg: parseFloat(recordData.preco_resina),
+                horas_paradas: parseFloat(recordData.horas_paradas),
+                motivo_parada: recordData.motivo_parada,
+                timestamp_criacao: recordData.timestamp_criacao
+              }
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          // Sucesso: remover draft e redirecionar
+          const drafts = JSON.parse(localStorage.getItem('turno_drafts') || '[]');
+          const updatedDrafts = drafts.filter(d => d.id !== recordId);
+          localStorage.setItem('turno_drafts', JSON.stringify(updatedDrafts));
+          pendingRecords = pendingRecords.filter(r => r.id !== recordId);
+
+          showToast('Lançamento registrado com sucesso!', 'success');
+
+          // Redirecionar para tela de resultado
+          setTimeout(() => {
+            window.location.href = '/resultado-turno?id=' + recordId;
+          }, 1500);
+        } catch (error) {
+          // Erro: adicionar à fila de pendentes
+          addPendingRecord(recordData);
+          showToast('Registro salvo localmente. Será enviado assim que houver conexão.', 'info');
+
+          // Limpar form
+          form.reset();
+          handleLinhaSelect('');
+          toggleMotivoParagdaField();
+          updateSubmitButtonState();
+
+          // Tentar sincronização em background
+          if (navigator.onLine) {
+            setTimeout(() => syncPendingRecords(), 2000);
+          }
+        }
+      });
+
+      // Form reset
+      document.getElementById('turnoForm').addEventListener('reset', () => {
+        setTimeout(() => {
+          handleLinhaSelect('');
+          toggleMotivoParagdaField();
+          updateSubmitButtonState();
+          document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+        }, 0);
+      });
+
+      // Sincronizar quando voltar online
+      window.addEventListener('online', () => {
+        showToast('Conexão restaurada. Sincronizando registros...', 'info');
+        syncPendingRecords();
+      });
+
+      window.addEventListener('offline', () => {
+        showToast('Conexão perdida. Registros serão sincronizados depois.', 'info');
+      });
+    }
+
+    // Inicializar quando DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', initForm);
+  </script>
+</body>
+</html>

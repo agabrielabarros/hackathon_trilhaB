@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consulta de Registros</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--tinta);
+    }
+
+    .filtros {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    @media (max-width: 700px) {
+      .filtros {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .campo-grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select {
+      height: 48px;
+      padding: 0 0.75rem;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      color: var(--tinta);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"]::placeholder,
+    input[type="date"]::placeholder {
+      color: var(--grafite);
+    }
+
+    input[type="text"]:disabled,
+    input[type="date"]:disabled,
+    select:disabled {
+      background-color: var(--papel);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .botoes-acoes {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      height: 48px;
+      padding: 0 1.5rem;
+      border: none;
+      background-color: var(--aco);
+      color: var(--superficie);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: background-color 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #163a4a;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .botao-secundario {
+      background-color: var(--grafite);
+    }
+
+    .botao-secundario:hover:not(:disabled) {
+      background-color: #4a525a;
+    }
+
+    .aviso {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      border-radius: 0;
+      display: none;
+    }
+
+    .aviso.visible {
+      display: block;
+    }
+
+    .mensagem {
+      padding: 1rem;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      border-radius: 0;
+    }
+
+    .mensagem-erro {
+      border-left: 4px solid var(--critico);
+      background-color: #fdf5f5;
+    }
+
+    .mensagem-erro .titulo {
+      font-weight: 600;
+      color: var(--critico);
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .mensagem-erro .conteudo {
+      font-size: 0.85rem;
+      color: var(--tinta);
+    }
+
+    .mensagem-vazio {
+      border-left: 4px solid var(--aco);
+      background-color: #f0f5f8;
+    }
+
+    .mensagem-vazio .titulo {
+      font-weight: 600;
+      color: var(--aco);
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .mensagem-vazio .conteudo {
+      font-size: 0.85rem;
+      color: var(--tinta);
+    }
+
+    .tabela-container {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background-color: var(--papel);
+      border-bottom: 1px solid var(--regua);
+    }
+
+    th {
+      padding: 0.75rem;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--regua);
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+    }
+
+    tbody tr {
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    tbody tr:hover {
+      background-color: var(--aco-claro);
+    }
+
+    .skeleton-row {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-cell {
+      height: 16px;
+      background-color: var(--papel);
+      border-radius: 2px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .paginacao {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      border-top: none;
+      font-size: 0.85rem;
+    }
+
+    .paginacao button {
+      height: 40px;
+      padding: 0 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .info-paginacao {
+      font-family: ui-monospace, monospace;
+      color: var(--grafite);
+    }
+
+    .drawer-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.3);
+      display: none;
+      z-index: 999;
+    }
+
+    .drawer-backdrop.visible {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 500px;
+      height: 100vh;
+      background-color: var(--superficie);
+      border-left: 1px solid var(--regua);
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .drawer.visible {
+      display: flex;
+    }
+
+    @media (max-width: 700px) {
+      .drawer {
+        max-width: 100%;
+      }
+    }
+
+    .drawer-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--regua);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-header h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .fechar-drawer {
+      background: none;
+      border: none;
+      color: var(--tinta);
+      font-size: 1.5rem;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drawer-conteudo {
+      padding: 1.5rem;
+      flex: 1;
+    }
+
+    .campo-detalhes {
+      margin-bottom: 1.5rem;
+    }
+
+    .campo-detalhes label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .campo-detalhes .valor {
+      font-family: ui-monospace, monospace;
+      font-size: 0.95rem;
+      color: var(--tinta);
+      word-break: break-word;
+    }
+
+    .campo-destaque {
+      padding: 1rem;
+      background-color: var(--papel);
+      border-left: 4px solid var(--aco);
+      margin-bottom: 1.5rem;
+    }
+
+    .campo-destaque label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .campo-destaque .valor {
+      font-family: ui-monospace, monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--aco);
+    }
+
+    .separador {
+      height: 1px;
+      background-color: var(--regua);
+      margin: 1.5rem 0;
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+      }
+
+      .filtros {
+        padding: 0.75rem;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .botoes-acoes {
+        gap: 0.5rem;
+      }
+
+      button {
+        font-size: 0.85rem;
+        padding: 0 1rem;
+        flex: 1;
+        min-width: 120px;
+      }
+
+      table {
+        font-size: 0.8rem;
+      }
+
+      th, td {
+        padding: 0.5rem;
+      }
+
+      th {
+        font-size: 0.65rem;
+      }
+
+      td {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Consulta de Registros Históricos</h1>
+
+    <div class="filtros">
+      <div class="campo-grupo">
+        <label for="filtroLinha">Linha de Extrusão</label>
+        <input type="text" id="filtroLinha" placeholder="Ex: Linha A" />
+      </div>
+      <div class="campo-grupo">
+        <label for="filtroTurno">Turno</label>
+        <select id="filtroTurno">
+          <option value="">Todos</option>
+          <option value="1">Turno 1</option>
+          <option value="2">Turno 2</option>
+          <option value="3">Turno 3</option>
+        </select>
+      </div>
+      <div class="campo-grupo">
+        <label for="filtroDataInicial">Data Inicial</label>
+        <input type="date" id="filtroDataInicial" />
+      </div>
+      <div class="campo-grupo">
+        <label for="filtroDataFinal">Data Final</label>
+        <input type="date" id="filtroDataFinal" />
+      </div>
+      <div class="campo-grupo">
+        <label for="filtroMotivo">Motivo da Parada</label>
+        <input type="text" id="filtroMotivo" placeholder="Buscar por motivo..." />
+      </div>
+    </div>
+
+    <div class="botoes-acoes">
+      <button id="botaoBuscar">Buscar</button>
+      <button id="botaoExportar" class="botao-secundario">Exportar CSV</button>
+    </div>
+
+    <div id="avisoDiv" class="aviso"></div>
+
+    <div class="tabela-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Linha</th>
+            <th>Turno</th>
+            <th>Resina Consumida</th>
+            <th>Tubo Bom</th>
+            <th>Perda Total</th>
+            <th>Perda %</th>
+            <th>Custo</th>
+            <th>Responsável</th>
+            <th>Motivo da Parada</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaCorpo">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="paginacao">
+      <button id="botaoPaginacaoAnterior">← Anterior</button>
+      <span id="infoPaginacao" class="info-paginacao">Página 1 de 1</span>
+      <button id="botaoPaginacaoProxima">Próxima →</button>
+    </div>
+  </div>
+
+  <div id="drawerBackdrop" class="drawer-backdrop"></div>
+  <div id="drawer" class="drawer">
+    <div class="drawer-header">
+      <h2>Detalhes do Registro</h2>
+      <button class="fechar-drawer" id="botaoFecharDrawer">✕</button>
+    </div>
+    <div class="drawer-conteudo">
+      <div class="campo-destaque">
+        <label>Lançado por</label>
+        <div class="valor" id="detalheResponsavel">—</div>
+        <label style="margin-top: 0.75rem;">Em</label>
+        <div class="valor" id="detalheTimestamp">—</div>
+      </div>
+
+      <div class="separador"></div>
+
+      <div class="campo-detalhes">
+        <label>Data</label>
+        <div class="valor" id="detalheData">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Linha de Extrusão</label>
+        <div class="valor" id="detalheLinha">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Turno</label>
+        <div class="valor" id="detalheTurno">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Resina Consumida (kg)</label>
+        <div class="valor" id="detalheResinaBruta">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Tubo Bom Produzido (kg)</label>
+        <div class="valor" id="detalheTuboBom">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Refugo de Partida (kg)</label>
+        <div class="valor" id="detalheRefugoPartida">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Purga de Troca (kg)</label>
+        <div class="valor" id="detalhePurgaTroca">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Sobra de Corte (kg)</label>
+        <div class="valor" id="detalheSobraCorte">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Perda Total (kg)</label>
+        <div class="valor" id="detalhePerda">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Perda Percentual (%)</label>
+        <div class="valor" id="detalhePercent">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Preço da Resina (R$/kg)</label>
+        <div class="valor" id="detalhePrecoResina">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Custo da Perda (R$)</label>
+        <div class="valor" id="detalheCustoPerda">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Horas Paradas</label>
+        <div class="valor" id="detalheHorasParadas">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Motivo da Parada</label>
+        <div class="valor" id="detalheMotivo">—</div>
+      </div>
+      <div class="campo-detalhes">
+        <label>Status</label>
+        <div class="valor" id="detalheStatus">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Estado global
+    let paginaAtual = 1;
+    const registrosPorPagina = 20;
+    let ultimosResultados = [];
+    let ultimosFiltros = {};
+    let carregando = false;
+    let motivosUnicos = [];
+
+    // Elementos
+    const filtroLinha = document.getElementById('filtroLinha');
+    const filtroTurno = document.getElementById('filtroTurno');
+    const filtroDataInicial = document.getElementById('filtroDataInicial');
+    const filtroDataFinal = document.getElementById('filtroDataFinal');
+    const filtroMotivo = document.getElementById('filtroMotivo');
+    const botaoBuscar = document.getElementById('botaoBuscar');
+    const botaoExportar = document.getElementById('botaoExportar');
+    const tabelaCorpo = document.getElementById('tabelaCorpo');
+    const avisoDiv = document.getElementById('avisoDiv');
+    const drawer = document.getElementById('drawer');
+    const drawerBackdrop = document.getElementById('drawerBackdrop');
+    const botaoFecharDrawer = document.getElementById('botaoFecharDrawer');
+    const botaoPaginacaoAnterior = document.getElementById('botaoPaginacaoAnterior');
+    const botaoPaginacaoProxima = document.getElementById('botaoPaginacaoProxima');
+    const infoPaginacao = document.getElementById('infoPaginacao');
+
+    // Funções auxiliares
+    function desabilitarFiltros(desabilitado) {
+      filtroLinha.disabled = desabilitado;
+      filtroTurno.disabled = desabilitado;
+      filtroDataInicial.disabled = desabilitado;
+      filtroDataFinal.disabled = desabilitado;
+      filtroMotivo.disabled = desabilitado;
+      botaoBuscar.disabled = desabilitado;
+      botaoExportar.disabled = desabilitado;
+    }
+
+    function formatarData(dataString) {
+      if (!dataString) return '—';
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+
+    function formatarDataHora(dataString) {
+      if (!dataString) return '—';
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    function formatarNumero(valor, casasDecimais = 2) {
+      if (valor === null || valor === undefined) return '—';
+      return parseFloat(valor).toFixed(casasDecimais).replace('.', ',');
+    }
+
+    function mostrarSkeleton() {
+      tabelaCorpo.innerHTML = '';
+      for (let i = 0; i < registrosPorPagina; i++) {
+        const tr = document.createElement('tr');
+        tr.className = 'skeleton-row';
+        for (let j = 0; j < 10; j++) {
+          const td = document.createElement('td');
+          td.innerHTML = '<div class="skeleton-cell"></div>';
+          tr.appendChild(td);
+        }
+        tabelaCorpo.appendChild(tr);
+      }
+    }
+
+    function exibirMensagemVazia() {
+      avisoDiv.classList.add('visible');
+      avisoDiv.innerHTML = `
+        <div class="mensagem mensagem-vazio">
+          <div class="titulo">Nenhum registro encontrado</div>
+          <div class="conteudo">
+            Revise os filtros aplicados e tente novamente. Verifique se as datas, linha e turno estão corretos.
+          </div>
+        </div>
+      `;
+    }
+
+    function exibirErro(mensagem) {
+      avisoDiv.classList.add('visible');
+      avisoDiv.innerHTML = `
+        <div class="mensagem mensagem-erro">
+          <div class="titulo">Erro ao buscar registros</div>
+          <div class="conteudo">${mensagem}</div>
+        </div>
+      `;
+    }
+
+    function ocultarAviso() {
+      avisoDiv.classList.remove('visible');
+      avisoDiv.innerHTML = '';
+    }
+
+    function fecharDrawer() {
+      drawer.classList.remove('visible');
+      drawerBackdrop.classList.remove('visible');
+    }
+
+    function abrirDrawer(registro) {
+      document.getElementById('detalheResponsavel').textContent = registro.dados.responsavel || '—';
+      document.getElementById('detalheTimestamp').textContent = formatarDataHora(registro.criado_em);
+      document.getElementById('detalheData').textContent = formatarData(registro.dados.data);
+      document.getElementById('detalheLinha').textContent = registro.dados.linha || '—';
+      document.getElementById('detalheTurno').textContent = registro.dados.turno || '—';
+      document.getElementById('detalheResinaBruta').textContent = formatarNumero(registro.dados.resina_consumida_kg);
+      document.getElementById('detalheTuboBom').textContent = formatarNumero(registro.dados.tubo_bom_kg);
+      document.getElementById('detalheRefugoPartida').textContent = formatarNumero(registro.dados.refugo_partida_kg);
+      document.getElementById('detalhePurgaTroca').textContent = formatarNumero(registro.dados.purga_troca_kg);
+      document.getElementById('detalheSobraCorte').textContent = formatarNumero(registro.dados.sobra_corte_kg);
+      document.getElementById('detalhePerda').textContent = formatarNumero(registro.dados.perda_total_kg);
+      document.getElementById('detalhePercent').textContent = formatarNumero(registro.dados.perda_percentual);
+      document.getElementById('detalhePrecoResina').textContent = formatarNumero(registro.dados.preco_resina_reais_kg);
+      document.getElementById('detalheCustoPerda').textContent = formatarNumero(registro.dados.custo_perda_reais);
+      document.getElementById('detalheHorasParadas').textContent = formatarNumero(registro.dados.horas_paradas, 1);
+      document.getElementById('detalheMotivo').textContent = registro.dados.motivo_parada || '—';
+      document.getElementById('detalheStatus').textContent = registro.dados.status_meta || '—';
+
+      drawer.classList.add('visible');
+      drawerBackdrop.classList.add('visible');
+    }
+
+    function renderizarTabela(registros) {
+      tabelaCorpo.innerHTML = '';
+      if (registros.length === 0) {
+        exibirMensagemVazia();
+        return;
+      }
+
+      ocultarAviso();
+      registros.forEach(registro => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatarData(registro.dados.data)}</td>
+          <td>${registro.dados.linha || '—'}</td>
+          <td>${registro.dados.turno || '—'}</td>
+          <td>${formatarNumero(registro.dados.resina_consumida_kg)}</td>
+          <td>${formatarNumero(registro.dados.tubo_bom_kg)}</td>
+          <td>${formatarNumero(registro.dados.perda_total_kg)}</td>
+          <td>${formatarNumero(registro.dados.perda_percentual)}%</td>
+          <td>R$ ${formatarNumero(registro.dados.custo_perda_reais)}</td>
+          <td>${registro.dados.responsavel || '—'}</td>
+          <td>${registro.dados.motivo_parada || '—'}</td>
+        `;
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => abrirDrawer(registro));
+        tabelaCorpo.appendChild(tr);
+      });
+    }
+
+    function atualizarPaginacao(totalRegistros) {
+      const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
+      infoPaginacao.textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+      botaoPaginacaoAnterior.disabled = paginaAtual <= 1;
+      botaoPaginacaoProxima.disabled = paginaAtual >= totalPaginas;
+    }
+
+    async function buscarRegistros() {
+      carregando = true;
+      desabilitarFiltros(true);
+      mostrarSkeleton();
+      ocultarAviso();
+
+      try {
+        const response = await fetch('/api/apps/empresa-tubos-meridiano-extrus-o-de-tu-2/records?tipo=registros_turno');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const json = await response.json();
+        let registros = json.registros || [];
+
+        // Aplicar filtros
+        const filtros = {
+          linha: filtroLinha.value.trim(),
+          turno: filtroTurno.value,
+          dataInicial: filtroDataInicial.value,
+          dataFinal: filtroDataFinal.value,
+          motivo: filtroMotivo.value.trim().toLowerCase()
+        };
+
+        ultimosFiltros = filtros;
+
+        registros = registros.filter(reg => {
+          if (filtros.linha && (!reg.dados.linha || !reg.dados.linha.toUpperCase().includes(filtros.linha.toUpperCase()))) {
+            return false;
+          }
+          if (filtros.turno && reg.dados.turno != filtros.turno) {
+            return false;
+          }
+          if (filtros.dataInicial && reg.dados.data < filtros.dataInicial) {
+            return false;
+          }
+          if (filtros.dataFinal && reg.dados.data > filtros.dataFinal) {
+            return false;
+          }
+          if (filtros.motivo && (!reg.dados.motivo_parada || !reg.dados.motivo_parada.toLowerCase().includes(filtros.motivo))) {
+            return false;
+          }
+          return true;
+        });
+
+        ultimosResultados = registros;
+        paginaAtual = 1;
+
+        // Coletar motivos únicos para autocomplete
+        motivosUnicos = [...new Set(registros.map(r => r.dados.motivo_parada).filter(Boolean))];
+
+        // Paginar
+        const inicio = (paginaAtual - 1) * registrosPorPagina;
+        const fim = inicio + registrosPorPagina;
+        const registrosPagina = registros.slice(inicio, fim);
+
+        renderizarTabela(registrosPagina);
+        atualizarPaginacao(registros.length);
+
+      } catch (erro) {
+        exibirErro(erro.message);
+        tabelaCorpo.innerHTML = '';
+      } finally {
+        carregando = false;
+        desabilitarFiltros(false);
+      }
+    }
+
+    function paginaAnterior() {
+      if (paginaAtual > 1) {
+        paginaAtual--;
+        const inicio = (paginaAtual - 1) * registrosPorPagina;
+        const fim = inicio + registrosPorPagina;
+        const registrosPagina = ultimosResultados.slice(inicio, fim);
+        renderizarTabela(registrosPagina);
+        atualizarPaginacao(ultimosResultados.length);
+      }
+    }
+
+    function proximaPagina() {
+      const totalPaginas = Math.ceil(ultimosResultados.length / registrosPorPagina);
+      if (paginaAtual < totalPaginas) {
+        paginaAtual++;
+        const inicio = (paginaAtual - 1) * registrosPorPagina;
+        const fim = inicio + registrosPorPagina;
+        const registrosPagina = ultimosResultados.slice(inicio, fim);
+        renderizarTabela(registrosPagina);
+        atualizarPaginacao(ultimosResultados.length);
+      }
+    }
+
+    function exportarCSV() {
+      if (ultimosResultados.length === 0) {
+        exibirErro('Nenhum registro para exportar. Execute uma busca primeiro.');
+        return;
+      }
+
+      const colunas = [
+        'Data',
+        'Linha',
+        'Turno',
+        'Resina Consumida (kg)',
+        'Tubo Bom (kg)',
+        'Perda Total (kg)',
+        'Perda (%)',
+        'Custo da Perda (R$)',
+        'Responsável',
+        'Motivo da Parada'
+      ];
+
+      let csv = colunas.map(c => `"${c}"`).join(',') + '\n';
+
+      ultimosResultados.forEach(registro => {
+        const linha = [
+          formatarData(registro.dados.data),
+          registro.dados.linha || '',
+          registro.dados.turno || '',
+          formatarNumero(registro.dados.resina_consumida_kg),
+          formatarNumero(registro.dados.tubo_bom_kg),
+          formatarNumero(registro.dados.perda_total_kg),
+          formatarNumero(registro.dados.perda_percentual),
+          formatarNumero(registro.dados.custo_perda_reais),
+          registro.dados.responsavel || '',
+          registro.dados.motivo_parada || ''
+        ];
+        csv += linha.map(campo => `"${campo}"`).join(',') + '\n';
+      });
+
+      const dataNome = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+      const nomeArquivo = `consulta-registros-${dataNome}.csv`;
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', nomeArquivo);
+      link.style.visibility = 'hidden';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Event listeners
+    botaoBuscar.addEventListener('click', buscarRegistros);
+    botaoExportar.addEventListener('click', exportarCSV);
+    botaoPaginacaoAnterior.addEventListener('click', paginaAnterior);
+    botaoPaginacaoProxima.addEventListener('click', proximaPagina);
+    botaoFecharDrawer.addEventListener('click', fecharDrawer);
+    drawerBackdrop.addEventListener('click', fecharDrawer);
+
+    // Enter nos filtros
+    filtroLinha.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') buscarRegistros();
+    });
+    filtroDataInicial.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') buscarRegistros();
+    });
+    filtroDataFinal.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') buscarRegistros();
+    });
+    filtroMotivo.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') buscarRegistros();
+    });
+
+    // Carregamento inicial: buscar uma vez ao carregar
+    window.addEventListener('load', () => {
+      buscarRegistros();
+    });
+  </script>
+</body>
+</html>

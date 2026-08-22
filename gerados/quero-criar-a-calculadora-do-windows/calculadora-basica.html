@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Básica</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      background-color: var(--papel);
+      color: var(--tinta);
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 16px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 400px;
+      width: 100%;
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--tinta);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .feedback {
+      display: none;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--grafite);
+      font-size: 13px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .feedback.visible {
+      display: block;
+    }
+
+    .feedback.ok {
+      background-color: #E8F5E9;
+      border-left-color: var(--ok);
+      color: #1B5E20;
+    }
+
+    .feedback.erro {
+      background-color: #FFEBEE;
+      border-left-color: var(--critico);
+      color: #B71C1C;
+    }
+
+    .feedback.info {
+      background-color: #E3F2FD;
+      border-left-color: var(--aco);
+      color: #0D47A1;
+    }
+
+    .display-wrapper {
+      margin-bottom: 24px;
+    }
+
+    .display-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    #display {
+      width: 100%;
+      height: 64px;
+      background-color: #F5F5F5;
+      border: 1px solid var(--regua);
+      padding: 12px;
+      font-family: 'Courier New', ui-monospace, monospace;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--tinta);
+      text-align: right;
+      line-height: 1.4;
+      word-wrap: break-word;
+      word-break: break-all;
+      white-space: pre-wrap;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      min-height: 64px;
+    }
+
+    input[type="hidden"][data-calc-state] {
+      display: none;
+    }
+
+    .botoes-container {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 479px) {
+      .botoes-container {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (min-width: 480px) and (max-width: 767px) {
+      .botoes-container {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (min-width: 768px) {
+      .botoes-container {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    button {
+      min-height: 48px;
+      padding: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      color: var(--tinta);
+      cursor: pointer;
+      border-radius: 0;
+      transition: background-color 0.2s, border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active,
+    button:hover {
+      background-color: var(--aco-claro);
+      border-color: var(--aco);
+    }
+
+    button[data-action="operador"] {
+      background-color: var(--aco-claro);
+      color: var(--aco);
+      font-weight: 600;
+    }
+
+    button[data-action="operador"]:active,
+    button[data-action="operador"]:hover {
+      background-color: var(--aco);
+      color: var(--superficie);
+    }
+
+    button[data-action="igual"] {
+      background-color: var(--ok);
+      color: var(--superficie);
+      font-weight: 600;
+      grid-column: span 2;
+    }
+
+    button[data-action="igual"]:active,
+    button[data-action="igual"]:hover {
+      background-color: #245440;
+    }
+
+    button[data-action="limpar"] {
+      background-color: var(--alerta);
+      color: var(--superficie);
+      font-weight: 600;
+      grid-column: span 2;
+    }
+
+    button[data-action="limpar"]:active,
+    button[data-action="limpar"]:hover {
+      background-color: #7A4005;
+    }
+
+    .historico-secao {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--regua);
+    }
+
+    .historico-titulo {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .historico-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .historico-item {
+      font-family: 'Courier New', ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--grafite);
+      padding: 8px;
+      background-color: #FAFAF8;
+      border-left: 3px solid var(--aco);
+      line-height: 1.4;
+    }
+
+    .historico-vazio {
+      font-size: 12px;
+      color: var(--grafite);
+      padding: 12px;
+      text-align: center;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calculadora</h1>
+
+    <div class="feedback" id="feedback"></div>
+
+    <input type="hidden" data-calc-state="rastreabilidade" id="calcStateTracker">
+
+    <div class="display-wrapper">
+      <label class="display-label">Resultado</label>
+      <div id="display">0</div>
+    </div>
+
+    <div class="botoes-container" id="botoesContainer">
+      <button type="button" data-action="limpar" data-valor="C">C</button>
+      <button type="button" data-action="numero" data-valor="7">7</button>
+      <button type="button" data-action="numero" data-valor="8">8</button>
+      <button type="button" data-action="numero" data-valor="9">9</button>
+
+      <button type="button" data-action="operador" data-operador="/" data-simbolo="÷">÷</button>
+      <button type="button" data-action="numero" data-valor="4">4</button>
+      <button type="button" data-action="numero" data-valor="5">5</button>
+      <button type="button" data-action="numero" data-valor="6">6</button>
+
+      <button type="button" data-action="operador" data-operador="*" data-simbolo="×">×</button>
+      <button type="button" data-action="numero" data-valor="1">1</button>
+      <button type="button" data-action="numero" data-valor="2">2</button>
+      <button type="button" data-action="numero" data-valor="3">3</button>
+
+      <button type="button" data-action="operador" data-operador="-" data-simbolo="-">−</button>
+      <button type="button" data-action="numero" data-valor="0">0</button>
+      <button type="button" data-action="numero" data-valor=".">.</button>
+      <button type="button" data-action="operador" data-operador="+" data-simbolo="+">+</button>
+
+      <button type="button" data-action="igual">=</button>
+    </div>
+
+    <div class="historico-secao">
+      <label class="historico-titulo">Histórico</label>
+      <div class="historico-lista" id="historicoLista">
+        <div class="historico-vazio">Nenhum cálculo ainda.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      display: '0',
+      operandoAnterior: null,
+      operadorAtual: null,
+      operandoNovo: false,
+      ultimaOperacao: null
+    };
+
+    const elements = {
+      display: document.getElementById('display'),
+      botoesContainer: document.getElementById('botoesContainer'),
+      feedback: document.getElementById('feedback'),
+      historicoLista: document.getElementById('historicoLista'),
+      stateTracker: document.getElementById('calcStateTracker')
+    };
+
+    let historico = [];
+
+    function carregarHistorico() {
+      try {
+        const data = localStorage.getItem('calc_historico');
+        if (data) {
+          historico = JSON.parse(data);
+          renderizarHistorico();
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar histórico:', e);
+      }
+    }
+
+    function salvarHistoricoLocal() {
+      try {
+        localStorage.setItem('calc_historico', JSON.stringify(historico));
+      } catch (e) {
+        console.warn('Erro ao salvar histórico localmente:', e);
+      }
+    }
+
+    function atualizarDisplay() {
+      elements.display.textContent = state.display.length > 16 
+        ? state.display.slice(-16)
+        : state.display;
+      elements.stateTracker.setAttribute('data-display-valor', state.display);
+    }
+
+    function mostrarFeedback(mensagem, tipo = 'info') {
+      const el = elements.feedback;
+      el.textContent = mensagem;
+      el.className = `feedback visible ${tipo}`;
+      setTimeout(() => {
+        el.classList.remove('visible');
+      }, 4000);
+    }
+
+    function adicionarNumero(valor) {
+      if (valor === '.') {
+        if (state.display.includes('.')) return;
+        if (state.operandoNovo || state.display === '0') {
+          state.display = '0.';
+          state.operandoNovo = false;
+        } else {
+          state.display += '.';
+        }
+      } else {
+        if (state.operandoNovo) {
+          state.display = valor;
+          state.operandoNovo = false;
+        } else {
+          state.display = state.display === '0' ? valor : state.display + valor;
+        }
+      }
+      atualizarDisplay();
+    }
+
+    function selecionarOperador(operador) {
+      if (state.operadorAtual !== null && !state.operandoNovo) {
+        calcular();
+      }
+      state.operandoAnterior = parseFloat(state.display);
+      state.operadorAtual = operador;
+      state.operandoNovo = true;
+    }
+
+    function calcular() {
+      if (state.operadorAtual === null) return;
+
+      const operando2 = parseFloat(state.display);
+      const operando1 = state.operandoAnterior;
+      let resultado = 0;
+
+      switch (state.operadorAtual) {
+        case '+':
+          resultado = operando1 + operando2;
+          break;
+        case '-':
+          resultado = operando1 - operando2;
+          break;
+        case '*':
+          resultado = operando1 * operando2;
+          break;
+        case '/':
+          if (operando2 === 0) {
+            state.display = 'Erro: Divisão por zero';
+            state.operadorAtual = null;
+            state.operandoAnterior = null;
+            state.operandoNovo = true;
+            atualizarDisplay();
+            return;
+          }
+          resultado = operando1 / operando2;
+          break;
+      }
+
+      resultado = parseFloat(resultado.toFixed(10));
+      state.display = resultado.toString();
+      state.ultimaOperacao = {
+        operando1,
+        operador: state.operadorAtual,
+        operando2,
+        resultado
+      };
+
+      state.operadorAtual = null;
+      state.operandoAnterior = null;
+      state.operandoNovo = true;
+
+      atualizarDisplay();
+      registrarNoHistorico(operando1, state.ultimaOperacao.operador, operando2, resultado);
+    }
+
+    function limpar() {
+      state.display = '0';
+      state.operandoAnterior = null;
+      state.operadorAtual = null;
+      state.operandoNovo = false;
+      state.ultimaOperacao = null;
+      atualizarDisplay();
+    }
+
+    function registrarNoHistorico(operando1, operador, operando2, resultado) {
+      const simboloOperador = {
+        '+': '+',
+        '-': '−',
+        '*': '×',
+        '/': '÷'
+      }[operador] || operador;
+
+      const entrada = {
+        operando1: parseFloat(operando1),
+        operador: operador,
+        operando2: parseFloat(operando2),
+        resultado: parseFloat(resultado),
+        timestamp: new Date().toISOString()
+      };
+
+      historico.unshift(entrada);
+      if (historico.length > 50) {
+        historico.pop();
+      }
+
+      salvarHistoricoLocal();
+      renderizarHistorico();
+
+      persistirNoBackend(entrada);
+
+      console.log('Cálculo registrado:', entrada);
+    }
+
+    async function persistirNoBackend(dados) {
+      try {
+        const response = await fetch('/api/apps/quero-criar-a-calculadora-do-windows/records', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'historico_calculos',
+            dados: {
+              operando1: dados.operando1,
+              operador: dados.operador,
+              operando2: dados.operando2,
+              resultado: dados.resultado,
+              timestamp: dados.timestamp
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Erro HTTP ${response.status}: ${errorText}`);
+          mostrarFeedback(
+            `Aviso: Cálculo não foi salvo no servidor (HTTP ${response.status}). Ele permanece localmente.`,
+            'info'
+          );
+          return;
+        }
+
+        const result = await response.json();
+        console.log('Registrado no backend:', result);
+      } catch (e) {
+        console.error('Erro ao persistir no backend:', e.message);
+        mostrarFeedback(
+          `Aviso: Cálculo não foi salvo no servidor. Conexão indisponível? Ele permanece localmente.`,
+          'info'
+        );
+      }
+    }
+
+    function renderizarHistorico() {
+      if (historico.length === 0) {
+        elements.historicoLista.innerHTML = '<div class="historico-vazio">Nenhum cálculo ainda.</div>';
+        return;
+      }
+
+      elements.historicoLista.innerHTML = historico.map((item, idx) => {
+        const simboloOperador = {
+          '+': '+',
+          '-': '−',
+          '*': '×',
+          '/': '÷'
+        }[item.operador] || item.operador;
+
+        const dataFormatada = new Date(item.timestamp).toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        return `
+          <div class="historico-item" data-historico-idx="${idx}">
+            ${item.operando1} ${simboloOperador} ${item.operando2} = ${item.resultado}<br>
+            <span style="font-size: 10px; color: var(--regua);">${dataFormatada}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function delegarEventos(event) {
+      const btn = event.target.closest('button');
+      if (!btn) return;
+
+      const action = btn.getAttribute('data-action');
+
+      if (action === 'numero') {
+        adicionarNumero(btn.getAttribute('data-valor'));
+      } else if (action === 'operador') {
+        selecionarOperador(btn.getAttribute('data-operador'));
+      } else if (action === 'igual') {
+        calcular();
+      } else if (action === 'limpar') {
+        limpar();
+      }
+    }
+
+    function inicializar() {
+      carregarHistorico();
+      atualizarDisplay();
+
+      elements.botoesContainer.addEventListener('click', delegarEventos);
+      elements.botoesContainer.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        delegarEventos(e);
+      });
+
+      mostrarFeedback('Calculadora pronta. Comece a digitar números.', 'ok');
+    }
+
+    inicializar();
+  </script>
+</body>
+</html>

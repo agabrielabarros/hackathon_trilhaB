@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rastreamento de Lote</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --papel: #E7EAE4;
+      --superficie: #FCFDFB;
+      --tinta: #14171A;
+      --grafite: #5C636A;
+      --regua: #C6CBC3;
+      --aco: #1F4E5F;
+      --aco-claro: #E2ECEF;
+      --alerta: #9A5407;
+      --critico: #A32116;
+      --ok: #2C6E49;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--papel);
+      color: var(--tinta);
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--tinta);
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 12px;
+      color: var(--grafite);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .busca-area {
+      margin-bottom: 24px;
+    }
+
+    .busca-container {
+      position: relative;
+    }
+
+    .busca-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--regua);
+      background-color: var(--superficie);
+      color: var(--tinta);
+      font-size: 14px;
+      font-family: ui-monospace, monospace;
+    }
+
+    .busca-input::placeholder {
+      color: var(--grafite);
+    }
+
+    .busca-input:focus {
+      outline: none;
+      border-color: var(--aco);
+      box-shadow: inset 0 0 0 2px var(--aco-claro);
+    }
+
+    .spinner {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--regua);
+      border-top-color: var(--aco);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+
+    .spinner.visible {
+      display: block;
+    }
+
+    @keyframes spin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .mensagem {
+      margin-top: 8px;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 0;
+      border-left: 4px solid var(--regua);
+      background-color: var(--superficie);
+      display: none;
+    }
+
+    .mensagem.info {
+      display: block;
+      border-left-color: var(--aco);
+      color: var(--aco);
+    }
+
+    .mensagem.erro {
+      display: block;
+      border-left-color: var(--critico);
+      color: var(--critico);
+    }
+
+    .status-card {
+      display: none;
+      padding: 20px;
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      margin-bottom: 24px;
+      margin-top: 16px;
+    }
+
+    .status-card.visible {
+      display: block;
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .status-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .status-badge.verde {
+      background-color: var(--ok);
+    }
+
+    .status-badge.amarelo {
+      background-color: var(--alerta);
+    }
+
+    .status-badge.vermelho {
+      background-color: var(--critico);
+    }
+
+    .status-texto h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tinta);
+      margin-bottom: 4px;
+    }
+
+    .status-texto p {
+      font-size: 12px;
+      color: var(--grafite);
+    }
+
+    .status-legenda {
+      font-size: 11px;
+      color: var(--grafite);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    .conteudo {
+      display: none;
+    }
+
+    .conteudo.visible {
+      display: block;
+    }
+
+    .secao {
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .secao-titulo {
+      padding: 16px;
+      background-color: var(--aco-claro);
+      border-bottom: 1px solid var(--regua);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--aco);
+    }
+
+    .secao-conteudo {
+      padding: 16px;
+    }
+
+    .campo-linha {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .campo {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .campo-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 4px;
+    }
+
+    .campo-valor {
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      color: var(--tinta);
+      word-break: break-all;
+    }
+
+    .lista {
+      list-style: none;
+    }
+
+    .lista li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--regua);
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+    }
+
+    .lista li:last-child {
+      border-bottom: none;
+    }
+
+    .tabela-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      background-color: var(--aco-claro);
+      padding: 12px 8px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--aco);
+      border-bottom: 1px solid var(--regua);
+    }
+
+    td {
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--regua);
+    }
+
+    tbody tr {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    tbody tr:hover {
+      background-color: var(--aco-claro);
+    }
+
+    tbody tr.nc-row {
+      border-left: 4px solid transparent;
+    }
+
+    .card-vazio {
+      padding: 32px 16px;
+      text-align: center;
+      background-color: var(--superficie);
+      border: 1px solid var(--regua);
+      margin-bottom: 24px;
+    }
+
+    .card-vazio-icone {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .card-vazio-titulo {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tinta);
+      margin-bottom: 8px;
+    }
+
+    .card-vazio-descricao {
+      font-size: 12px;
+      color: var(--grafite);
+    }
+
+    .drawer-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+    }
+
+    .drawer-overlay.visible {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100vh;
+      background-color: var(--superficie);
+      border-left: 1px solid var(--regua);
+      z-index: 1000;
+      overflow-y: auto;
+      transition: right 0.3s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.visible {
+      right: 0;
+    }
+
+    @media (max-width: 600px) {
+      .drawer {
+        width: 100%;
+        right: -100%;
+      }
+    }
+
+    .drawer-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--regua);
+      background-color: var(--aco-claro);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-titulo {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--aco);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .drawer-fechar {
+      background: none;
+      border: none;
+      color: var(--aco);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .drawer-fechar:hover {
+      background-color: rgba(31, 78, 95, 0.1);
+    }
+
+    .drawer-conteudo {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .drawer-secao {
+      margin-bottom: 24px;
+    }
+
+    .drawer-secao-titulo {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--regua);
+      padding-bottom: 8px;
+    }
+
+    .drawer-secao-conteudo {
+      font-size: 12px;
+      color: var(--tinta);
+      line-height: 1.6;
+    }
+
+    .plano-item {
+      background-color: var(--papel);
+      padding: 12px;
+      margin-bottom: 8px;
+      border-left: 4px solid var(--aco);
+    }
+
+    .plano-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grafite);
+      margin-bottom: 4px;
+    }
+
+    .plano-valor {
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--tinta);
+      word-break: break-word;
+    }
+
+    .acoes {
+      padding: 16px;
+      border-top: 1px solid var(--regua);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 48px;
+      padding: 0 20px;
+      border: 1px solid var(--regua);
+      background-color: var(--aco);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: #163647;
+    }
+
+    .btn:active:not(:disabled) {
+      background-color: #0f2734;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn.secundario {
+      background-color: var(--papel);
+      color: var(--tinta);
+      border-color: var(--regua);
+    }
+
+    .btn.secundario:hover:not(:disabled) {
+      background-color: #d5d9d1;
+    }
+
+    .estado-vazio {
+      padding: 40px 16px;
+      text-align: center;
+    }
+
+    .estado-vazio-icone {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .estado-vazio-titulo {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--tinta);
+      margin-bottom: 8px;
+    }
+
+    .estado-vazio-descricao {
+      font-size: 13px;
+      color: var(--grafite);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        padding: 12px;
+      }
+
+      .campo-linha {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .campo {
+        min-width: auto;
+        margin-bottom: 12px;
+      }
+
+      table {
+        font-size: 11px;
+      }
+
+      th, td {
+        padding: 8px 6px;
+      }
+
+      .tabela-container {
+        overflow-x: auto;
+      }
+
+      .acoes {
+        flex-direction: column;
+      }
+
+      .btn {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Rastreamento de Lote</h1>
+      <p>Consulta completa da entrada à expedição</p>
+    </div>
+
+    <div class="busca-area">
+      <div class="busca-container">
+        <input 
+          type="text" 
+          class="busca-input" 
+          id="buscaInput" 
+          placeholder="ID do lote ou código alternativo"
+          autocomplete="off"
+        >
+        <div class="spinner" id="spinner"></div>
+      </div>
+      <div class="mensagem" id="mensagem"></div>
+    </div>
+
+    <div class="status-card" id="statusCard">
+      <div class="status-header">
+        <div class="status-badge" id="statusBadge">✓</div>
+        <div class="status-texto">
+          <h3 id="statusTitulo">Status do Lote</h3>
+          <p id="statusDescricao">Lote em conformidade</p>
+        </div>
+      </div>
+      <div class="status-legenda">
+        <strong>Verde:</strong> Sem não conformidades ou todas resolvidas<br>
+        <strong>Amarelo:</strong> Investigação em andamento<br>
+        <strong>Vermelho:</strong> Não conformidade crítica ou ação vencida
+      </div>
+    </div>
+
+    <div class="estado-vazio" id="estadoVazio">
+      <div class="estado-vazio-icone">🔍</div>
+      <div class="estado-vazio-titulo">Nenhum lote localizado</div>
+      <div class="estado-vazio-descricao">
+        Digite o ID do lote ou código alternativo na barra de busca acima para rastrear seu histórico completo.
+      </div>
+    </div>
+
+    <div class="conteudo" id="conteudo">
+      <!-- Seção Entrada -->
+      <div class="secao" id="secaoEntrada">
+        <div class="secao-titulo">Seção 1: Entrada de Matéria-Prima</div>
+        <div class="secao-conteudo">
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">ID do Lote</span>
+              <span class="campo-valor" id="loteId">—</span>
+            </div>
+            <div class="campo">
+              <span class="campo-label">Matéria-Prima</span>
+              <span class="campo-valor" id="materiaprima">—</span>
+            </div>
+          </div>
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">Data de Entrada</span>
+              <span class="campo-valor" id="dataEntrada">—</span>
+            </div>
+            <div class="campo">
+              <span class="campo-label">Fornecedor</span>
+              <span class="campo-valor" id="fornecedor">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção Processamento -->
+      <div class="secao" id="secaoProcessamento">
+        <div class="secao-titulo">Seção 2: Processamento</div>
+        <div class="secao-conteudo">
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">Equipamentos Utilizados</span>
+              <ul class="lista" id="equipamentosList"></ul>
+            </div>
+          </div>
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">Operadores por Turno</span>
+              <ul class="lista" id="operadorList"></ul>
+            </div>
+          </div>
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">Data de Processamento</span>
+              <span class="campo-valor" id="dataProcessamento">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção Conformidade -->
+      <div id="secaoConformidade">
+        <div class="secao-titulo">Seção 3: Conformidade</div>
+        <div class="secao-conteudo" id="conformidadeConteudo"></div>
+      </div>
+
+      <!-- Seção Expedição -->
+      <div class="secao" id="secaoExpedicao">
+        <div class="secao-titulo">Seção 4: Expedição</div>
+        <div class="secao-conteudo">
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">Data de Saída</span>
+              <span class="campo-valor" id="dataSaida">—</span>
+            </div>
+            <div class="campo">
+              <span class="campo-label">Destino</span>
+              <span class="campo-valor" id="destino">—</span>
+            </div>
+          </div>
+          <div class="campo-linha">
+            <div class="campo">
+              <span class="campo-label">Status de Qualidade Final</span>
+              <span class="campo-valor" id="statusQualidade">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão Exportar -->
+      <div class="acoes">
+        <button class="btn" id="btnExportar" disabled>Exportar Relatório</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer Lateral -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <span class="drawer-titulo">Detalhes da Não Conformidade</span>
+      <button class="drawer-fechar" id="fecharDrawer">✕</button>
+    </div>
+    <div class="drawer-conteudo" id="drawerContent"></div>
+  </div>
+
+  <script>
+    const TIMEOUT_MS = 1500;
+    const DEBOUNCE_MS = 300;
+    const API_BASE = '/api/apps/empresa-rivexx-componentes-ind-stria-d-4/records';
+
+    let debounceTimer = null;
+    let loteSelecionado = null;
+
+    // Elementos da página
+    const buscaInput = document.getElementById('buscaInput');
+    const spinner = document.getElementById('spinner');
+    const mensagem = document.getElementById('mensagem');
+    const statusCard = document.getElementById('statusCard');
+    const conteudo = document.getElementById('conteudo');
+    const estadoVazio = document.getElementById('estadoVazio');
+    const btnExportar = document.getElementById('btnExportar');
+    const drawer = document.getElementById('drawer');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const fecharDrawer = document.getElementById('fecharDrawer');
+
+    // Listeners
+    buscaInput.addEventListener('input', debouncarBusca);
+    btnExportar.addEventListener('click', exportarRelatorioPDF);
+    fecharDrawer.addEventListener('click', fecharDrawerLateral);
+    drawerOverlay.addEventListener('click', fecharDrawerLateral);
+
+    function debouncarBusca(e) {
+      clearTimeout(debounceTimer);
+      const termo = e.target.value.trim();
+      
+      if (!termo) {
+        limparResultados();
+        return;
+      }
+
+      spinner.classList.add('visible');
+      debounceTimer = setTimeout(() => buscarLote(termo), DEBOUNCE_MS);
+    }
+
+    async function buscarLote(termo) {
+      try {
+        // Buscar lote
+        const respLotes = await Promise.race([
+          fetch(`${API_BASE}?tipo=rastreamento_lotes`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), TIMEOUT_MS))
+        ]);
+
+        if (!respLotes.ok) throw new Error('Erro ao buscar lotes');
+        
+        const { registros: lotes } = await respLotes.json();
+        const lote = lotes.find(l => 
+          l.dados.lote_id === termo || l.id === termo
+        );
+
+        if (!lote) {
+          exibirMensagem('Lote não localizado. Verifique o ID e tente novamente.', 'erro');
+          spinner.classList.remove('visible');
+          limparResultados();
+          return;
+        }
+
+        // Buscar não conformidades associadas
+        const respNC = await Promise.race([
+          fetch(`${API_BASE}?tipo=nao_conformidades`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), TIMEOUT_MS))
+        ]);
+
+        if (!respNC.ok) throw new Error('Erro ao buscar não conformidades');
+
+        const { registros: allNC } = await respNC.json();
+        const naoConformidades = allNC.filter(nc => nc.dados.lote_afetado === lote.dados.lote_id);
+
+        // Buscar investigações e planos de ação
+        const respInv = await Promise.race([
+          fetch(`${API_BASE}?tipo=investigacoes`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), TIMEOUT_MS))
+        ]);
+
+        if (!respInv.ok) throw new Error('Erro ao buscar investigações');
+        const { registros: investigacoes } = await respInv.json();
+
+        const respPlanos = await Promise.race([
+          fetch(`${API_BASE}?tipo=planos_acao`),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), TIMEOUT_MS))
+        ]);
+
+        if (!respPlanos.ok) throw new Error('Erro ao buscar planos de ação');
+        const { registros: planosAcao } = await respPlanos.json();
+
+        // Enriquecer NC com investigação e plano de ação
+        const detalhesNC = naoConformidades.map(nc => {
+          const inv = investigacoes.find(i => i.dados.nao_conformidade_id === nc.id);
+          const planos = planosAcao.filter(p => p.dados.investigacao_id === inv?.id);
+          return {
+            ...nc,
+            investigacao: inv,
+            planos_acao: planos
+          };
+        });
+
+        loteSelecionado = {
+          ...lote,
+          naoConformidades: detalhesNC
+        };
+
+        exibirMensagem('Lote localizado com sucesso.', 'info');
+        exibirDetalhesLote(lote, detalhesNC);
+        atualizarStatusVisual(detalhesNC);
+        btnExportar.disabled = false;
+
+      } catch (erro) {
+        let msgErro = 'Erro ao buscar lote.';
+        if (erro.message === 'Timeout') {
+          msgErro = 'Busca demorou mais de 1,5s. Tente novamente.';
+        } else {
+          msgErro = erro.message || msgErro;
+        }
+        exibirMensagem(msgErro + ' Verifique sua conexão e tente novamente.', 'erro');
+        limparResultados();
+      } finally {
+        spinner.classList.remove('visible');
+      }
+    }
+
+    function exibirDetalhesLote(lote, naoConformidades) {
+      const dados = lote.dados;
+
+      document.getElementById('loteId').textContent = dados.lote_id || '—';
+      document.getElementById('materiaprima').textContent = dados.materia_prima_origem || '—';
+      document.getElementById('dataEntrada').textContent = formatarData(dados.data_entrada) || '—';
+      document.getElementById('fornecedor').textContent = dados.fornecedor || '—';
+      document.getElementById('dataProcessamento').textContent = formatarData(dados.data_processamento) || '—';
+      document.getElementById('dataSaida').textContent = formatarData(dados.data_saida_producao) || '—';
+      document.getElementById('destino').textContent = dados.destino_expedicao || '—';
+      document.getElementById('statusQualidade').textContent = dados.status_qualidade || '—';
+
+      // Equipamentos
+      const equipList = document.getElementById('equipamentosList');
+      equipList.innerHTML = '';
+      if (dados.equipamentos_usados && Array.isArray(dados.equipamentos_usados)) {
+        dados.equipamentos_usados.forEach(eq => {
+          const li = document.createElement('li');
+          li.textContent = eq;
+          equipList.appendChild(li);
+        });
+      } else {
+        equipList.innerHTML = '<li>Nenhum equipamento registrado</li>';
+      }
+
+      // Operadores
+      const operList = document.getElementById('operadorList');
+      operList.innerHTML = '';
+      if (dados.operadores && Array.isArray(dados.operadores)) {
+        dados.operadores.forEach(op => {
+          const li = document.createElement('li');
+          li.textContent = op;
+          operList.appendChild(li);
+        });
+      } else {
+        operList.innerHTML = '<li>Nenhum operador registrado</li>';
+      }
+
+      // Não Conformidades
+      exibirConformidade(naoConformidades);
+
+      conteudo.classList.add('visible');
+      estadoVazio.style.display = 'none';
+    }
+
+    function exibirConformidade(naoConformidades) {
+      const container = document.getElementById('conformidadeConteudo');
+      
+      if (!naoConformidades || naoConformidades.length === 0) {
+        container.innerHTML = `
+          <div class="card-vazio">
+            <div class="card-vazio-icone">✓</div>
+            <div class="card-vazio-titulo">Nenhuma não conformidade registrada</div>
+            <div class="card-vazio-descricao">
+              Este lote não apresentou não conformidades durante o processamento.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const html = `
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Defeito</th>
+                <th>Data Detecção</th>
+                <th>Origem Detecção</th>
+                <th>Status Investigação</th>
+                <th>Status Plano Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${naoConformidades.map(nc => `
+                <tr class="nc-row" data-nc-id="${nc.id}">
+                  <td><strong>${nc.id || '—'}</strong></td>
+                  <td>${nc.dados.descricao_defeito || '—'}</td>
+                  <td>${formatarData(nc.dados.data_criacao) || '—'}</td>
+                  <td>${nc.dados.origem_deteccao || '—'}</td>
+                  <td>${nc.investigacao?.dados?.status || '—'}</td>
+                  <td>${nc.planos_acao?.[0]?.dados?.status || 'Sem plano'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+
+      // Adicionar listeners aos cliques de linhas
+      document.querySelectorAll('.nc-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const ncId = row.dataset.ncId;
+          const nc = naoConformidades.find(n => n.id === ncId);
+          if (nc) abrirDrawer(nc);
+        });
+      });
+    }
+
+    function abrirDrawer(nc) {
+      const investigacao = nc.investigacao?.dados || {};
+      const planos = nc.planos_acao || [];
+
+      let drawerHtml = `
+        <div class="drawer-secao">
+          <div class="drawer-secao-titulo">Informações Gerais</div>
+          <div class="drawer-secao-conteudo">
+            <strong>ID NC:</strong> ${nc.id || '—'}<br>
+            <strong>Defeito:</strong> ${nc.dados.descricao_defeito || '—'}<br>
+            <strong>Data Detecção:</strong> ${formatarData(nc.dados.data_criacao) || '—'}<br>
+            <strong>Origem Detecção:</strong> ${nc.dados.origem_deteccao || '—'}<br>
+            <strong>Operador:</strong> ${nc.dados.operador || '—'}<br>
+            <strong>Equipamento:</strong> ${nc.dados.equipamento || '—'}<br>
+            <strong>Turno:</strong> ${nc.dados.turno || '—'}
+          </div>
+        </div>
+
+        <div class="drawer-secao">
+          <div class="drawer-secao-titulo">Investigação</div>
+          <div class="drawer-secao-conteudo">
+            <strong>Status:</strong> ${investigacao.status || '—'}<br>
+            <strong>Analista:</strong> ${investigacao.analista || '—'}<br>
+            <strong>Data Início:</strong> ${formatarData(investigacao.data_inicio) || '—'}<br>
+            <strong>Data Conclusão:</strong> ${formatarData(investigacao.data_conclusao) || 'Em andamento'}<br>
+            <strong>Metodologia:</strong> ${investigacao.metodologia || '—'}<br>
+            <div style="margin-top: 8px;">
+              <strong>Causa Raiz Suspeita:</strong><br>
+              <span style="white-space: pre-wrap; word-break: break-word;">
+                ${investigacao.causa_raiz_suspeita || '—'}
+              </span>
+            </div>
+            <div style="margin-top: 8px;">
+              <strong>Causa Raiz Confirmada:</strong><br>
+              <span style="white-space: pre-wrap; word-break: break-word;">
+                ${investigacao.causa_raiz_confirmada || '—'}
+              </span>
+            </div>
+            <div style="margin-top: 8px;">
+              <strong>Evidência:</strong><br>
+              <span style="white-space: pre-wrap; word-break: break-word;">
+                ${investigacao.evidencia || '—'}
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (planos.length > 0) {
+        drawerHtml += `
+          <div class="drawer-secao">
+            <div class="drawer-secao-titulo">Planos de Ação Corretiva</div>
+            <div class="drawer-secao-conteudo">
+              ${planos.map(plano => `
+                <div class="plano-item">
+                  <div class="plano-label">Ação:</div>
+                  <div class="plano-valor">${plano.dados.acao_corretiva || '—'}</div>
+                  <div class="plano-label" style="margin-top: 8px;">Responsável:</div>
+                  <div class="plano-valor">${plano.dados.responsavel || '—'}</div>
+                  <div class="plano-label" style="margin-top: 8px;">Prazo:</div>
+                  <div class="plano-valor">${formatarData(plano.dados.prazo) || '—'}</div>
+                  <div class="plano-label" style="margin-top: 8px;">Status:</div>
+                  <div class="plano-valor">${plano.dados.status || '—'}</div>
+                  <div class="plano-label" style="margin-top: 8px;">Evidência de Conclusão:</div>
+                  <div class="plano-valor">${plano.dados.evidencia_conclusao || '—'}</div>
+                  <div class="plano-label" style="margin-top: 8px;">Data Conclusão:</div>
+                  <div class="plano-valor">${formatarData(plano.dados.data_conclusao) || 'Pendente'}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        drawerHtml += `
+          <div class="drawer-secao">
+            <div class="drawer-secao-titulo">Planos de Ação Corretiva</div>
+            <div class="drawer-secao-conteudo">
+              Nenhum plano de ação registrado para esta não conformidade.
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('drawerContent').innerHTML = drawerHtml;
+      drawer.classList.add('visible');
+      drawerOverlay.classList.add('visible');
+    }
+
+    function fecharDrawerLateral() {
+      drawer.classList.remove('visible');
+      drawerOverlay.classList.remove('visible');
+    }
+
+    function atualizarStatusVisual(naoConformidades) {
+      const badge = document.getElementById('statusBadge');
+      const titulo = document.getElementById('statusTitulo');
+      const descricao = document.getElementById('statusDescricao');
+
+      statusCard.classList.add('visible');
+
+      // Analisar status
+      let status = 'verde';
+      let tituloTexto = 'Em Conformidade';
+      let descricaoTexto = 'Nenhuma não conformidade ou todas resolvidas.';
+
+      if (naoConformidades && naoConformidades.length > 0) {
+        const temInvestigacaoAberta = naoConformidades.some(nc => 
+          nc.investigacao && !nc.investigacao.dados.data_conclusao
+        );
+        const temPlanVencido = naoConformidades.some(nc => 
+          nc.planos_acao && nc.planos_acao.some(p => {
+            const prazo = new Date(p.dados.prazo);
+            const agora = new Date();
+            return prazo < agora && p.dados.status !== 'Concluído';
+          })
+        );
+        const temNCCritica = naoConformidades.some(nc => 
+          nc.dados.criticidade === 'crítica'
+        );
+
+        if (temPlanVencido || temNCCritica) {
+          status = 'vermelho';
+          tituloTexto = 'Ação Necessária';
+          descricaoTexto = 'Não conformidade crítica ou ação vencida.';
+        } else if (temInvestigacaoAberta) {
+          status = 'amarelo';
+          tituloTexto = 'Investigação em Andamento';
+          descricaoTexto = 'Uma ou mais não conformidades estão em fase de investigação.';
+        }
+      }
+
+      badge.classList.remove('verde', 'amarelo', 'vermelho');
+      badge.classList.add(status);
+      
+      const iconMap = {
+        'verde': '✓',
+        'amarelo': '⚠',
+        'vermelho': '✕'
+      };
+      badge.textContent = iconMap[status] || '—';
+
+      titulo.textContent = tituloTexto;
+      descricao.textContent = descricaoTexto;
+    }
+
+    async function exportarRelatorioPDF() {
+      if (!loteSelecionado) return;
+
+      try {
+        btnExportar.disabled = true;
+        exibirMensagem('Gerando relatório...', 'info');
+
+        // Gerar dados do PDF
+        const loteId = loteSelecionado.dados.lote_id;
+        const naoConformidades = loteSelecionado.naoConformidades;
+        
+        // Criar objeto para envio ao backend
+        const relatorio = {
+          lote_id: loteId,
+          lote_dados: loteSelecionado.dados,
+          nao_conformidades: naoConformidades,
+          data_geracao: new Date().toISOString(),
+          responsavel: 'Sistema de Rastreamento'
+        };
+
+        // Enviar para backend para gerar PDF
+        const resp = await fetch(`${API_BASE}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo: 'relatorios_lote',
+            dados: relatorio
+          })
+        });
+
+        if (!resp.ok) throw new Error('Erro ao gerar relatório');
+
+        // Se sucesso, criar download client-side simulado
+        gerarPDFLocal(relatorio);
+
+        exibirMensagem('Relatório gerado com sucesso!', 'info');
+
+      } catch (erro) {
+        exibirMensagem('Erro ao gerar relatório: ' + erro.message, 'erro');
+      } finally {
+        btnExportar.disabled = false;
+      }
+    }
+
+    function gerarPDFLocal(relatorio) {
+      // Gerar PDF de forma simplificada (usando canvas + texto)
+      const conteudoTexto = gerarConteudoRelatorio(relatorio);
+      const blob = new Blob([conteudoTexto], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const hoje = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      a.href = url;
+      a.download = `Lote_${relatorio.lote_id}_${hoje}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function gerarConteudoRelatorio(relatorio) {
+      const linha = '='.repeat(80);
+      let conteudo = `${linha}\n`;
+      conteudo += `RELATÓRIO DE RASTREAMENTO DE LOTE\n`;
+      conteudo += `${linha}\n\n`;
+
+      // Cabeçalho
+      conteudo += `CABEÇALHO\n`;
+      conteudo += `-`.repeat(80) + `\n`;
+      conteudo += `ID do Lote: ${relatorio.lote_id}\n`;
+      conteudo += `Matéria-Prima: ${relatorio.lote_dados.materia_prima_origem}\n`;
+      conteudo += `Data Entrada: ${formatarData(relatorio.lote_dados.data_entrada)}\n`;
+      conteudo += `Data Saída: ${formatarData(relatorio.lote_dados.data_saida_producao)}\n`;
+      conteudo += `Destino: ${relatorio.lote_dados.destino_expedicao}\n`;
+      conteudo += `Status Qualidade: ${relatorio.lote_dados.status_qualidade}\n`;
+      conteudo += `Data Geração do Relatório: ${new Date().toLocaleString()}\n`;
+      conteudo += `Responsável: ${relatorio.responsavel}\n\n`;
+
+      // Histórico Cronológico
+      conteudo += `HISTÓRICO CRONOLÓGICO\n`;
+      conteudo += `-`.repeat(80) + `\n`;
+      conteudo += `Entrada: ${formatarData(relatorio.lote_dados.data_entrada)}\n`;
+      conteudo += `Processamento: ${formatarData(relatorio.lote_dados.data_processamento)}\n`;
+      conteudo += `Saída: ${formatarData(relatorio.lote_dados.data_saida_producao)}\n\n`;
+
+      // Não Conformidades
+      conteudo += `NÃO CONFORMIDADES\n`;
+      conteudo += `-`.repeat(80) + `\n`;
+      
+      if (relatorio.nao_conformidades.length === 0) {
+        conteudo += `Nenhuma não conformidade registrada.\n\n`;
+      } else {
+        relatorio.nao_conformidades.forEach((nc, idx) => {
+          conteudo += `\n[${idx + 1}] NC-ID: ${nc.id}\n`;
+          conteudo += `    Defeito: ${nc.dados.descricao_defeito}\n`;
+          conteudo += `    Data Detecção: ${formatarData(nc.dados.data_criacao)}\n`;
+          conteudo += `    Origem: ${nc.dados.origem_deteccao}\n`;
+          conteudo += `    Operador: ${nc.dados.operador}\n`;
+          conteudo += `    Equipamento: ${nc.dados.equipamento}\n`;
+          conteudo += `    Turno: ${nc.dados.turno}\n`;
+
+          if (nc.investigacao) {
+            conteudo += `\n    INVESTIGAÇÃO:\n`;
+            conteudo += `    - Status: ${nc.investigacao.dados.status}\n`;
+            conteudo += `    - Analista: ${nc.investigacao.dados.analista}\n`;
+            conteudo += `    - Data Início: ${formatarData(nc.investigacao.dados.data_inicio)}\n`;
+            conteudo += `    - Data Conclusão: ${formatarData(nc.investigacao.dados.data_conclusao) || 'Em andamento'}\n`;
+            conteudo += `    - Causa Raiz: ${nc.investigacao.dados.causa_raiz_confirmada || 'Não definida'}\n`;
+          }
+
+          if (nc.planos_acao && nc.planos_acao.length > 0) {
+            conteudo += `\n    PLANOS DE AÇÃO:\n`;
+            nc.planos_acao.forEach((plano, pIdx) => {
+              conteudo += `    [${pIdx + 1}] Ação: ${plano.dados.acao_corretiva}\n`;
+              conteudo += `        Responsável: ${plano.dados.responsavel}\n`;
+              conteudo += `        Prazo: ${formatarData(plano.dados.prazo)}\n`;
+              conteudo += `        Status: ${plano.dados.status}\n`;
+              conteudo += `        Data Conclusão: ${formatarData(plano.dados.data_conclusao) || 'Pendente'}\n`;
+            });
+          }
+        });
+      }
+
+      conteudo += `\n\n${linha}\n`;
+      conteudo += `FIM DO RELATÓRIO\n`;
+      conteudo += `${linha}\n`;
+
+      return conteudo;
+    }
+
+    function exibirMensagem(texto, tipo) {
+      mensagem.textContent = texto;
+      mensagem.className = `mensagem ${tipo}`;
+      if (tipo === 'info') {
+        setTimeout(() => {
+          mensagem.classList.remove('info');
+        }, 5000);
+      }
+    }
+
+    function formatarData(data) {
+      if (!data) return null;
+      try {
+        const d = new Date(data);
+        return d.toLocaleString('pt-BR', { 
+          timeZone: 'America/Sao_Paulo',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return data;
+      }
+    }
+
+    function limparResultados() {
+      conteudo.classList.remove('visible');
+      statusCard.classList.remove('visible');
+      estadoVazio.style.display = 'block';
+      btnExportar.disabled = true;
+      loteSelecionado = null;
+    }
+  </script>
+</body>
+</html>
