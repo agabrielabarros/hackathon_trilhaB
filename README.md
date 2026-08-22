@@ -29,14 +29,6 @@ Este projeto entrega um **Squad Autônomo de Agentes de IA** (PO Agent, Dev Agen
 
 O squad atua em fluxo em cadeia (*pipeline* autônomo e auditável):
 
-```mermaid
-graph TD
-    Briefing[📄 Briefing Rivexx] --> PO[👔 PO Agent]
-    PO -->|User Stories + Critérios de Aceite| Dev[💻 Dev Agent]
-    Dev -->|Código + Log de Decisões Técnicas| QA[🧪 QA Agent]
-    QA -->|Validação contra Critérios| App[📱 Aplicação Web Funcional]
-```
-
 Um squad de três agentes autônomos (**PO**, **Dev** e **QA**) recebe um briefing em texto bruto, interpreta o domínio de negócio, planeja a arquitetura da aplicação, escreve o código das telas e valida a qualidade de cada entregável antes da liberação.
 
 As páginas web geradas **não existem previamente no projeto** — elas são concebidas, desenvolvidas e testadas do zero a cada execução.
