@@ -10,7 +10,6 @@ Este projeto entrega um **Squad Autônomo de Agentes de IA** (PO Agent, Dev Agen
 
 ### 📊 Apresentação & Pitch Deck
 - 📢 **Pitch Deck em Slides (PPT Interactive):** [Acessar Apresentação do Pitch](https://docs.google.com/presentation/d/1cEV_et7xpIk_lS8jQb_aWymGlyeqLzAx/edit?usp=sharing&ouid=115014557577006516562&rtpof=true&sd=true)
-- 📄 **Pitch Deck em PDF Exportável:** [Baixar Pitch Deck PDF](pitch_deck_rivexx.pdf)
 
 ---
 
