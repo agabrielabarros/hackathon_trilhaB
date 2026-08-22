@@ -173,7 +173,7 @@ gerados/               # Aplicações geradas por projeto (*.html e artefatos)
 ## 🤝 Artefatos Entregues
 
 A cada ciclo de execução finalizado, o squad produz automaticamente na pasta `gerados/{projeto}/`:
-1. As páginas funcionais do sistema (`*.html`).
+1. As páginas funcionais do sistema (`Aplicação Web completa cobrindo os 3 cenários operacionais; user Stories priorizadas geradas pelo Agente PO,;registro de decisões técnicas de arquitetura geradas pelo Dev Agent`).
 2. O backlog detalhado do produto em Markdown.
-3. O registro de decisões técnicas e de design.
+3. O registro de decisões técnicas.
 4. O relatório completo de auditoria do QA com a avaliação do gate de 12 asserções.
