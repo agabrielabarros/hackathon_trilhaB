@@ -37,30 +37,6 @@ graph TD
     QA -->|Validação contra Critérios| App[📱 Aplicação Web Funcional]
 ```
 
-1. **PO Agent (Product Owner):** Recebe o briefing, interpreta os requisitos do cliente e constrói o backlog com User Stories e critérios de aceite em formato *Given-When-Then*.
-2. **Dev Agent (Developer & Architect):** Consome o backlog, toma decisões de arquitetura técnica, desenvolve a aplicação responsiva e registra as justificativas técnicas no log.
-3. **QA Agent (Quality Assurance):** Intercepta o código gerado pelo Dev, cria e executa suítes de teste contra os critérios do PO e emite o relatório de liberação.
-
----
-
-## 🛠️ Entregáveis do Hackathon
-
-Os artefatos gerados automaticamente pela execução do squad são:
-
-- `app.py`: Aplicação Web completa cobrindo os 3 cenários operacionais.
-- `backlog_po.md`: User Stories priorizadas geradas pelo **PO Agent**.
-- `log_decisoes_dev.md`: Registro de decisões técnicas de arquitetura gerado pelo **Dev Agent**.
-- `relatorio_qa.md`: Matriz de testes executados e evidências gerada pelo **QA Agent**.
-- `pitch_deck_rivexx.ppt` / `pitch_deck_rivexx.pdf`: Apresentação executiva em formato.
-
-
-
-_______
-
-
-
- Squad Forge — briefing entra, aplicação sai
-
 Um squad de três agentes autônomos (**PO**, **Dev** e **QA**) recebe um briefing em texto bruto, interpreta o domínio de negócio, planeja a arquitetura da aplicação, escreve o código das telas e valida a qualidade de cada entregável antes da liberação.
 
 As páginas web geradas **não existem previamente no projeto** — elas são concebidas, desenvolvidas e testadas do zero a cada execução.
