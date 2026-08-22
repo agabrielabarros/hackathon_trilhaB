@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Rivexx.Squad.Web/Rivexx.Squad.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Rivexx.Squad.Tests/Rivexx.Squad.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+src/Rivexx.Squad.Web/App_Data/*.json
+generated/runs/
+TestResults/
+.env

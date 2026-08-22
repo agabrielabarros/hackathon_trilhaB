@@ -1,0 +1,73 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Squad em acao";
+    ViewData["Active"] = "squad";
+}
+
+<section class="page-heading">
+    <div><span class="eyebrow">Sala de entrega autonoma</span><h1>Observe o squad trabalhando</h1><p>Entregue o briefing uma vez. O PO organiza, o Dev implementa e o QA decide a liberacao.</p></div>
+    @if (Model.Run is not null) { <span class="release-badge">Release #@Model.Run.Id · @Model.Run.Status · @Model.Run.ExecutionMode</span> }
+</section>
+
+<section class="metrics-grid">
+    <article class="metric"><span>Execucoes</span><strong>@Model.Metrics.Runs</strong><small>briefings processados</small></article>
+    <article class="metric"><span>Mensagens</span><strong>@Model.Metrics.Events</strong><small>eventos auditaveis</small></article>
+    <article class="metric"><span>Stories aceitas</span><strong>@Model.Metrics.AcceptedStories</strong><small>liberadas pelo QA</small></article>
+    <article class="metric"><span>Registros</span><strong>@Model.Metrics.Nonconformities</strong><small>nao conformidades</small></article>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel briefing-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Entrada humana</span><h2>Briefing do cliente</h2></div><span class="step-pill">@(Model.LlmConfigured ? $"OpenAI · {Model.LlmModel}" : "Fallback offline")</span></div>
+        <form id="squad-form">
+            <label for="briefing">Contexto, problema e restricoes</label>
+            <textarea id="briefing" name="briefing" rows="11" required minlength="40">@IndexModel.DefaultBriefing</textarea>
+            <button class="button primary full" type="submit"><span class="button-label">Iniciar squad autonomo</span><span>→</span></button>
+            <p class="form-hint">Depois do disparo, nenhuma decisao humana e solicitada.</p>
+        </form>
+    </section>
+
+    <section class="panel timeline-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Auditoria ao vivo</span><h2>Linha de comunicacao</h2></div>@if (Model.Run is not null) { <span class="step-pill">@Model.Run.Events.Count eventos</span> }</div>
+        @if (Model.Run is not null)
+        {
+            <ol class="timeline">
+                @foreach (var item in Model.Run.Events)
+                {
+                    <li class="event @item.Status">
+                        <div class="event-index">@item.Sequence.ToString("00")</div>
+                        <div class="event-body"><div class="event-route"><strong>@item.Sender</strong><span>→</span>@item.Recipient</div><h3>@item.Title</h3><div class="event-meta"><span>@item.EventType</span><time>@item.CreatedAt.ToLocalTime().ToString("HH:mm:ss")</time></div></div>
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <div class="empty-state"><span class="empty-icon">⌁</span><h3>O squad aguarda o briefing</h3><p>As mensagens e transferencias de contexto aparecerao aqui.</p></div>
+        }
+    </section>
+</div>
+
+@if (Model.Run?.Warnings.Count > 0)
+{
+    <section class="panel">
+        <div class="panel-heading"><div><span class="eyebrow">Resiliencia</span><h2>Avisos da execucao</h2></div><span class="step-pill">@Model.Run.ExecutionMode</span></div>
+        <ul>
+            @foreach (var warning in Model.Run.Warnings) { <li>@warning</li> }
+        </ul>
+    </section>
+}
+
+@if (Model.Run is not null)
+{
+    <section class="panel backlog-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Output do PO</span><h2>Backlog priorizado</h2></div><a class="text-link" asp-page="/Artefatos">Ver evidencias →</a></div>
+        <div class="story-grid">
+            @foreach (var story in Model.Run.Stories)
+            {
+                <article class="story-card"><div class="story-top"><span>@story.Key</span><span class="status">@story.Status</span></div><h3>@story.Title</h3><p>@story.Description</p><small>Prioridade P@story.Priority</small></article>
+            }
+        </div>
+    </section>
+}

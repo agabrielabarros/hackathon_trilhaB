@@ -1,0 +1,36 @@
+@{
+    var active = ViewData["Active"] as string ?? "squad";
+}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#081712" />
+    <title>@ViewData["Title"] | Rivexx Squad</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script defer src="~/js/site.js" asp-append-version="true"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" asp-page="/Index" aria-label="Rivexx Squad - inicio">
+            <span class="brand-mark">RX</span>
+            <span><strong>Rivexx Squad</strong><small>Autonomous delivery room</small></span>
+        </a>
+        <span class="system-status"><i></i> Sistema operacional</span>
+    </header>
+    <div class="shell">
+        <nav class="sidebar" aria-label="Navegacao principal">
+            <a class="@(active == "squad" ? "active" : "")" asp-page="/Index"><span>01</span> Squad em acao</a>
+            <a class="@(active == "registro" ? "active" : "")" asp-page="/Registro"><span>02</span> Registro agil</a>
+            <a class="@(active == "causa" ? "active" : "")" asp-page="/CausaRaiz"><span>03</span> Causa raiz</a>
+            <a class="@(active == "lotes" ? "active" : "")" asp-page="/Rastreabilidade"><span>04</span> Rastreabilidade</a>
+            <a class="@(active == "artefatos" ? "active" : "")" asp-page="/Artefatos"><span>05</span> Artefatos</a>
+            <div class="sidebar-note"><strong>Demo local</strong><p>PO, Dev e QA com comunicacao explicita e auditavel.</p></div>
+        </nav>
+        <main class="content">@RenderBody()</main>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

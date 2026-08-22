@@ -1,0 +1,21 @@
+@page
+@model ArtefatosModel
+@{
+    ViewData["Title"] = "Artefatos";
+    ViewData["Active"] = "artefatos";
+}
+<section class="page-heading"><div><span class="eyebrow">Pacote de evidencias</span><h1>Entrega auditavel</h1><p>Backlog, decisoes tecnicas e testes conectados a mesma execucao.</p></div>@if (Model.Run is not null) { <span class="release-badge">Release #@Model.Run.Id</span> }</section>
+@if (Model.Run is not null)
+{
+    var run = Model.Run;
+    <section class="artifact-summary"><article><span>Stories</span><strong>@run.Stories.Count</strong></article><article><span>Decisoes</span><strong>@run.Decisions.Count</strong></article><article><span>Quality gates</span><strong>@run.QaResults.Count</strong></article><article><span>Status</span><strong class="small-value">@run.Status</strong></article></section>
+    <div class="artifact-grid">
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">PO Agent</span><h2>Backlog</h2></div></div><div class="artifact-list">@foreach (var item in run.Stories) { <article><span>@item.Key · P@item.Priority</span><strong>@item.Title</strong><p>@string.Join(" · ", item.AcceptanceCriteria)</p></article> }</div></section>
+        <section class="panel"><div class="panel-heading"><div><span class="eyebrow">Dev Agent</span><h2>Decisoes tecnicas</h2></div></div><div class="artifact-list">@foreach (var item in run.Decisions) { <article><span>@item.StoryKey</span><strong>@item.Decision</strong><p>@item.Rationale</p></article> }</div></section>
+        <section class="panel qa-panel"><div class="panel-heading"><div><span class="eyebrow">QA Agent</span><h2>Relatorio de aceite</h2></div></div><div class="artifact-list">@foreach (var item in run.QaResults) { <article><span>@item.StoryKey</span><strong class="qa-result">@(item.Passed ? "APROVADA" : "REPROVADA")</strong><p>@item.Evidence</p><ul>@foreach (var test in item.Cases) { <li><span>@(test.Passed ? "✓" : "×")</span>@test.Name</li> }</ul></article> }</div></section>
+    </div>
+}
+else
+{
+    <section class="panel"><div class="empty-state"><h3>Nenhuma entrega gerada</h3><p>Inicie o squad para produzir os artefatos exigidos pela banca.</p><a class="button primary" asp-page="/Index">Abrir briefing</a></div></section>
+}

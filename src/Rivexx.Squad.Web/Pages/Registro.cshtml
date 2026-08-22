@@ -1,0 +1,33 @@
+@page
+@model RegistroModel
+@{
+    ViewData["Title"] = "Registro agil";
+    ViewData["Active"] = "registro";
+}
+<section class="page-heading"><div><span class="eyebrow">Cenario obrigatorio 01</span><h1>Registro agil</h1><p>Capture o defeito dimensional na linha 4 com os dados exigidos para auditoria.</p></div><span class="release-badge">Mobile-first</span></section>
+<div class="work-grid">
+    <section class="panel form-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Nova evidencia</span><h2>Nao conformidade</h2></div><span class="step-pill">8 campos</span></div>
+        <form id="nonconformity-form">
+            <div class="field-grid">
+                <div><label for="defectType">Tipo de defeito</label><input id="defectType" name="defectType" value="Defeito dimensional" required /></div>
+                <div><label for="line">Linha</label><input id="line" name="line" value="Linha 4" required /></div>
+                <div><label for="lotCode">Codigo do lote</label><input id="lotCode" name="lotCode" value="RVX-2026-0042" required /></div>
+                <div><label for="responsible">Responsavel</label><input id="responsible" name="responsible" value="Ana Lima" required /></div>
+                <div><label for="shift">Turno</label><select id="shift" name="shift"><option>1o turno</option><option selected>2o turno</option><option>3o turno</option></select></div>
+                <div><label for="equipment">Equipamento</label><input id="equipment" name="equipment" value="Injetora INJ-04" required /></div>
+            </div>
+            <label for="description">Descricao observada</label><textarea id="description" name="description" rows="3" required>Peca com largura 0,8 mm acima da tolerancia na inspecao final.</textarea>
+            <label for="evidence">Evidencia auditavel</label><input id="evidence" name="evidence" value="Medicao PAC-042 / foto IMG-1048" required />
+            <button class="button primary full" type="submit">Registrar e iniciar investigacao <span>→</span></button>
+        </form>
+    </section>
+    <section class="panel list-panel">
+        <div class="panel-heading"><div><span class="eyebrow">Historico</span><h2>Registros recentes</h2></div><span class="step-pill">@Model.Records.Count itens</span></div>
+        @if (Model.Records.Count > 0)
+        {
+            <div class="record-list">@foreach (var item in Model.Records) { <article class="record-card"><div class="record-main"><span class="record-id">NC-@item.Id.ToString("0000")</span><h3>@item.DefectType</h3><p>@item.Line · @item.LotCode · @item.Equipment</p></div><div class="record-side"><span class="status">@item.Status</span><small>@item.CreatedAt.ToLocalTime().ToString("dd/MM HH:mm")</small></div></article> }</div>
+        }
+        else { <div class="empty-state compact"><h3>Nenhum registro ainda</h3><p>O primeiro item aparecera imediatamente apos o envio.</p></div> }
+    </section>
+</div>

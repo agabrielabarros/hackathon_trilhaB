@@ -1,0 +1,30 @@
+@page
+@model CausaRaizModel
+@{
+    ViewData["Title"] = "Causa raiz";
+    ViewData["Active"] = "causa";
+}
+<section class="page-heading"><div><span class="eyebrow">Cenario obrigatorio 02</span><h1>Causa raiz assistida</h1><p>Converta uma ocorrencia em hipotese explicavel e plano corretivo monitoravel.</p></div><span class="release-badge">5 Porques + historico</span></section>
+@if (Model.Records.Count > 0)
+{
+    <section class="panel selection-panel"><div class="panel-heading"><div><span class="eyebrow">Entrada</span><h2>Escolha uma ocorrencia</h2></div></div><div class="record-list horizontal">@foreach (var item in Model.Records) { <article class="record-card"><div class="record-main"><span class="record-id">NC-@item.Id.ToString("0000")</span><h3>@item.DefectType</h3><p>@item.Line · @item.LotCode</p></div><button class="button secondary" data-root-cause="@item.Id">Gerar analise assistida</button></article> }</div></section>
+}
+else
+{
+    <section class="panel"><div class="empty-state"><h3>Registre uma nao conformidade primeiro</h3><p>A analise precisa de uma ocorrencia auditavel como entrada.</p><a class="button primary" asp-page="/Registro">Ir para registro</a></div></section>
+}
+@if (Model.Analyses.Count > 0)
+{
+    <div class="analysis-grid">
+        @foreach (var view in Model.Analyses)
+        {
+            var item = view.Analysis;
+            <article class="panel analysis-card">
+                <div class="analysis-header"><div><span class="record-id">NC-@item.NonconformityId.ToString("0000") · @view.LotCode</span><h2>@item.SuggestedCause</h2></div><div class="confidence"><strong>@item.Confidence%</strong><span>confianca</span></div></div>
+                <div class="method-strip"><span>Metodo</span><strong>@item.Method</strong></div>
+                <div class="analysis-sections"><div><span class="eyebrow">Evidencia historica</span><p>@item.HistoricalEvidence</p></div><div><span class="eyebrow">Acao corretiva</span><p>@item.CorrectiveAction</p></div></div>
+                <footer><span>Responsavel: <strong>@item.Owner</strong></span><span>Prazo: <strong>@item.DueDate.ToString("dd/MM/yyyy")</strong></span><span class="status">@item.Status</span></footer>
+            </article>
+        }
+    </div>
+}

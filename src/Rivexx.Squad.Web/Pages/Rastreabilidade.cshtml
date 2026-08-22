@@ -1,0 +1,21 @@
+@page
+@model RastreabilidadeModel
+@{
+    ViewData["Title"] = "Rastreabilidade";
+    ViewData["Active"] = "lotes";
+}
+<section class="page-heading"><div><span class="eyebrow">Cenario obrigatorio 03</span><h1>Rastreabilidade de lote</h1><p>Recupere a cadeia completa do insumo ao destino em uma unica consulta.</p></div><span class="release-badge">Resposta em segundos</span></section>
+<section class="panel search-panel"><form method="get"><label for="lote">Codigo do lote</label><div class="search-row"><input id="lote" name="lote" value="@(string.IsNullOrWhiteSpace(Model.Lote) ? "RVX-2026-0042" : Model.Lote)" required /><button class="button primary" type="submit">Rastrear lote →</button></div><p class="form-hint left">Lote preparado para a demo: RVX-2026-0042</p></form></section>
+@if (!string.IsNullOrWhiteSpace(Model.Lote) && Model.Lot is null) { <div class="alert error">Nenhum lote encontrado para <strong>@Model.Lote</strong>.</div> }
+@if (Model.Lot is not null)
+{
+    var lot = Model.Lot;
+    <section class="trace-hero"><div><span class="eyebrow">Lote localizado</span><h2>@lot.LotCode</h2><p>@lot.Product</p></div><span class="lot-status">@lot.Status</span></section>
+    <section class="trace-flow" aria-label="Fluxo produtivo do lote">
+        <article><span>01 · Insumo</span><strong>@lot.MaterialLot</strong><small>@lot.Supplier</small></article><i>→</i>
+        <article><span>02 · Producao</span><strong>@lot.Equipment</strong><small>@lot.Shift</small></article><i>→</i>
+        <article><span>03 · Pessoas</span><strong>@lot.Operators</strong><small>Operadores responsaveis</small></article><i>→</i>
+        <article><span>04 · Destino</span><strong>@lot.Destination</strong><small>@lot.Status</small></article>
+    </section>
+    <section class="panel detail-panel"><div class="panel-heading"><div><span class="eyebrow">Impacto potencial</span><h2>Lotes correlatos</h2></div></div><div class="related-lots"><span>@lot.RelatedLots</span><p>Compartilham materia-prima ou equipamento e devem entrar na avaliacao de impacto.</p></div></section>
+}
