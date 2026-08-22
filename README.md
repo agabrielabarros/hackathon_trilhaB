@@ -51,4 +51,4 @@ Os artefatos gerados automaticamente pela execução do squad são:
 - `backlog_po.md`: User Stories priorizadas geradas pelo **PO Agent**.
 - `log_decisoes_dev.md`: Registro de decisões técnicas de arquitetura gerado pelo **Dev Agent**.
 - `relatorio_qa.md`: Matriz de testes executados e evidências gerada pelo **QA Agent**.
-- `pitch_deck_rivexx.html` / `pitch_deck_rivexx.pdf`: Apresentação executiva em formato **P.D.S.V.A. (Reply Standard)**.
+- `pitch_deck_rivexx.ppt` / `pitch_deck_rivexx.pdf`: Apresentação executiva em formato.
